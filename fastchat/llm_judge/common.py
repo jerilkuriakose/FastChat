@@ -408,12 +408,18 @@ def chat_completion_openai(model, conv, temperature, max_tokens, api_dict=None):
     if api_dict is not None:
         openai.api_base = api_dict["api_base"]
         openai.api_key = api_dict["api_key"]
+
+    openai.api_type = os.getenv("LOCAL_API_TYPE")
+    openai.api_base = os.getenv("LOCAL_API_BASE")
+    openai.api_version = os.getenv("LOCAL_API_VERSION")
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+
     output = API_ERROR_OUTPUT
     for _ in range(API_MAX_RETRY):
         try:
             messages = conv.to_openai_api_messages()
             response = openai.ChatCompletion.create(
-                model=model,
+                engine=os.getenv("LOCAL_ENGINE"),
                 messages=messages,
                 n=1,
                 temperature=temperature,
