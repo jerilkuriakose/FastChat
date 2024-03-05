@@ -1592,6 +1592,18 @@ register_conv_template(
     )
 )
 
+# ALLAM Zero shot custom template
+register_conv_template(
+    Conversation(
+        name="allam_zero_shot",
+        system_message="A chat between a curious human and an artificial intelligence assistant. "
+        "The assistant gives helpful, detailed, and polite answers to the user's questions and responds in the same language as the user's input.",
+        roles=("Human", "Assistant"),
+        sep_style=SeparatorStyle.ADD_COLON_SINGLE,
+        sep="\n### ",
+        stop_str="###",
+    )
+)
 
 if __name__ == "__main__":
     from fastchat.conversation import get_conv_template
