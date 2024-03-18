@@ -2307,6 +2307,26 @@ class CllmAdapter(BaseModelAdapter):
         return get_conv_template("cllm")
 
 
+class AceGPTAdapter(BaseModelAdapter):
+    """Model adapter for AceGPT model for ALLAM benchmark"""
+
+    def match(self, model_path: str):
+        return "acegpt" in model_path.lower()
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("allam_zero_shot")
+    
+
+class JaisAdapter(BaseModelAdapter):
+    """Model adapter for AceGPT model for ALLAM benchmark"""
+
+    def match(self, model_path: str):
+        return "jais" in model_path.lower()
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("allam_zero_shot")
+
+
 # Note: the registration order matters.
 # The one registered earlier has a higher matching priority.
 register_model_adapter(PeftModelAdapter)
@@ -2398,6 +2418,8 @@ register_model_adapter(LlavaAdapter)
 register_model_adapter(YuanAdapter)
 register_model_adapter(GemmaAdapter)
 register_model_adapter(CllmAdapter)
+register_model_adapter(AceGPTAdapter)
+register_model_adapter(JaisAdapter)
 
 # After all adapters, try the default base adapter.
 register_model_adapter(BaseModelAdapter)
