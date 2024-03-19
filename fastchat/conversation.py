@@ -1620,12 +1620,25 @@ register_conv_template(
     )
 )
 
-# ALLAM Zero shot custom template
+# ALLAM Zero shot custom template for open source models
 register_conv_template(
     Conversation(
         name="allam_zero_shot",
         system_message="A chat between a curious human and an artificial intelligence assistant. "
         "The assistant gives helpful, detailed, and polite answers to the user's questions and responds in the same language as the user's input.",
+        roles=("Human", "Assistant"),
+        sep_style=SeparatorStyle.ADD_COLON_SINGLE,
+        sep="\n### ",
+        stop_str="###",
+    )
+)
+
+# ALLAM Zero shot custom template for in-house models
+register_conv_template(
+    Conversation(
+        name="allam_zero_shot_in_house",
+        system_message="A chat between a curious human and an artificial intelligence assistant. "
+        "The assistant gives helpful, detailed, and polite answers to the user's questions and responds in the same language as the user's input. As a helpful AI assistant, you adhere to Saudi Arabian values and culture while providing assistance.",
         roles=("Human", "Assistant"),
         sep_style=SeparatorStyle.ADD_COLON_SINGLE,
         sep="\n### ",
