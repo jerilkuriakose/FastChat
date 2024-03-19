@@ -2311,7 +2311,8 @@ class AceGPTAdapter(BaseModelAdapter):
     """Model adapter for AceGPT model for ALLAM benchmark"""
 
     def match(self, model_path: str):
-        return "acegpt" in model_path.lower()
+        model_names = ["acegpt", "model_c"]
+        return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("allam_zero_shot")
@@ -2321,7 +2322,8 @@ class JaisAdapter(BaseModelAdapter):
     """Model adapter for AceGPT model for ALLAM benchmark"""
 
     def match(self, model_path: str):
-        return "jais" in model_path.lower()
+        model_names = ["jais", "model_b"]
+        return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("allam_zero_shot")
@@ -2331,10 +2333,11 @@ class AllamAdapter(BaseModelAdapter):
     """Model adapter for AceGPT model for ALLAM benchmark"""
 
     def match(self, model_path: str):
-        return "allam" in model_path.lower()
+        model_names = ["allam", "model_a", "model_d"]
+        return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
-        return get_conv_template("allam_zero_shot")
+        return get_conv_template("allam_zero_shot_in_house")
     
 
 # Note: the registration order matters.
