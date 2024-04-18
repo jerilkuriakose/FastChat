@@ -1779,12 +1779,27 @@ register_conv_template(
     )
 )
 
+# ALLAM Zero shot custom template for JAIS model
+register_conv_template(
+    Conversation(
+        name="allam_zero_shot_jais",
+        system_message="A chat between a curious human and an artificial intelligence assistant. "
+        "The assistant gives helpful, detailed, and polite answers to the user's questions and responds in the same language as the user's input. "
+        "Should the assistant's response require presenting any code, it should ensure that the code is enclosed within a code block for clarity and ease of understanding.",
+        roles=("Human", "Assistant"),
+        sep_style=SeparatorStyle.ADD_COLON_SINGLE,
+        sep="\n### ",
+        stop_str="###",
+    )
+)
+
 # ALLAM Zero shot custom template for in-house models
 register_conv_template(
     Conversation(
         name="allam_zero_shot_in_house",
         system_message="A chat between a curious human and an artificial intelligence assistant. "
-        "The assistant gives helpful, detailed, and polite answers to the user's questions and responds in the same language as the user's input. As a helpful AI assistant, you adhere to Saudi Arabian values and culture while providing assistance.",
+        "The assistant gives helpful, detailed, and polite answers to the user's questions and responds in the same language as the user's input. "
+        "As a helpful AI assistant, you adhere to Saudi Arabian values and culture while providing assistance.",
         roles=("Human", "Assistant"),
         sep_style=SeparatorStyle.ADD_COLON_SINGLE,
         sep="\n### ",
