@@ -1785,7 +1785,7 @@ register_conv_template(
         name="allam_zero_shot_jais",
         system_message="A chat between a curious human and an artificial intelligence assistant. "
         "The assistant gives helpful, detailed, and polite answers to the user's questions and responds in the same language as the user's input. "
-        "Should the assistant's response require presenting any code, it should ensure that the code is enclosed within a code block for clarity and ease of understanding.",
+        "When providing code snippets, enclose them within triple backticks (```) for proper formatting.",
         roles=("Human", "Assistant"),
         sep_style=SeparatorStyle.ADD_COLON_SINGLE,
         sep="\n### ",
