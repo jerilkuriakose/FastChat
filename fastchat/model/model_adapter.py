@@ -2416,7 +2416,7 @@ class AllamAdapter(BaseModelAdapter):
     """Model adapter for AceGPT model for ALLAM benchmark"""
 
     def match(self, model_path: str):
-        model_names = ["allam", "model_a", "model_d"]
+        model_names = ["allam", "model_a", "model_d", "model_e"]
         return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
