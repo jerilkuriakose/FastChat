@@ -64,7 +64,7 @@ def load_demo_side_by_side_named(models, url_params):
     return states + selector_updates
 
 
-def vote_last_response(states, vote_type, model_selectors, request: gr.Request):
+def vote_last_response(states, vote_type, model_selectors, request: gr.Request, feedback=''):
     with open(get_conv_log_filename(), "a") as fout:
         data = {
             "tstamp": round(time.time(), 4),
@@ -72,49 +72,50 @@ def vote_last_response(states, vote_type, model_selectors, request: gr.Request):
             "models": [x for x in model_selectors],
             "states": [x.dict() for x in states],
             "ip": get_ip(request),
+            "feedback": feedback,
         }
         fout.write(json.dumps(data) + "\n")
     get_remote_logger().log(data)
 
 
 def leftvote_last_response(
-    state0, state1, model_selector0, model_selector1, request: gr.Request
+    state0, state1, model_selector0, model_selector1, tb_feedback, request: gr.Request
 ):
     logger.info(f"leftvote (named). ip: {get_ip(request)}")
     vote_last_response(
-        [state0, state1], "leftvote", [model_selector0, model_selector1], request
+        [state0, state1], "leftvote", [model_selector0, model_selector1], request, feedback=tb_feedback.strip()
     )
-    return ("",) + (disable_btn,) * 4
+    return ("",) + (disable_btn,) * 4 + ("", invisible_btn)
 
 
 def rightvote_last_response(
-    state0, state1, model_selector0, model_selector1, request: gr.Request
+    state0, state1, model_selector0, model_selector1, tb_feedback, request: gr.Request
 ):
     logger.info(f"rightvote (named). ip: {get_ip(request)}")
     vote_last_response(
-        [state0, state1], "rightvote", [model_selector0, model_selector1], request
+        [state0, state1], "rightvote", [model_selector0, model_selector1], request, feedback=tb_feedback.strip()
     )
-    return ("",) + (disable_btn,) * 4
+    return ("",) + (disable_btn,) * 4 + ("", invisible_btn)
 
 
 def tievote_last_response(
-    state0, state1, model_selector0, model_selector1, request: gr.Request
+    state0, state1, model_selector0, model_selector1, tb_feedback, request: gr.Request
 ):
     logger.info(f"tievote (named). ip: {get_ip(request)}")
     vote_last_response(
-        [state0, state1], "tievote", [model_selector0, model_selector1], request
+        [state0, state1], "tievote", [model_selector0, model_selector1], request, feedback=tb_feedback.strip()
     )
-    return ("",) + (disable_btn,) * 4
+    return ("",) + (disable_btn,) * 4 + ("", invisible_btn)
 
 
 def bothbad_vote_last_response(
-    state0, state1, model_selector0, model_selector1, request: gr.Request
+    state0, state1, model_selector0, model_selector1, tb_feedback, request: gr.Request
 ):
     logger.info(f"bothbad_vote (named). ip: {get_ip(request)}")
     vote_last_response(
-        [state0, state1], "bothbad_vote", [model_selector0, model_selector1], request
+        [state0, state1], "bothbad_vote", [model_selector0, model_selector1], request, feedback=tb_feedback.strip()
     )
-    return ("",) + (disable_btn,) * 4
+    return ("",) + (disable_btn,) * 4 + ("", invisible_btn)
 
 
 def regenerate(state0, state1, request: gr.Request):
@@ -139,6 +140,7 @@ def clear_history(request: gr.Request):
         + [""]
         + [invisible_btn] * 4
         + [disable_btn] * 2
+        + ["", invisible_btn]
     )
 
 
@@ -219,7 +221,6 @@ def add_text(
         * 6
     )
 
-
 def bot_response_multi(
     state0,
     state1,
@@ -287,8 +288,8 @@ def bot_response_multi(
 
 def flash_buttons():
     btn_updates = [
-        [disable_btn] * 4 + [enable_btn] * 2,
-        [enable_btn] * 6,
+        [disable_btn] * 4 + [enable_btn] * 2 + [enable_btn],
+        [enable_btn] * 6 + [enable_btn],
     ]
     for i in range(4):
         yield btn_updates[i % 2]
@@ -342,6 +343,14 @@ def build_side_by_side_ui_named(models):
                         height=550,
                         show_copy_button=True,
                     )
+    with gr.Row():
+        textbox_feedback = gr.Textbox(
+            show_label=False,
+            placeholder="Enter your JUSTIFICATION",
+            elem_id="input_box_feedback",
+            visible=False,
+            interactive=False
+        )
 
     with gr.Row():
         leftvote_btn = gr.Button(
@@ -407,23 +416,23 @@ def build_side_by_side_ui_named(models):
     ]
     leftvote_btn.click(
         leftvote_last_response,
-        states + model_selectors,
-        [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        states + model_selectors + [textbox_feedback],
+        [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn, textbox_feedback, textbox_feedback],
     )
     rightvote_btn.click(
         rightvote_last_response,
-        states + model_selectors,
-        [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        states + model_selectors + [textbox_feedback],
+        [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn, textbox_feedback, textbox_feedback],
     )
     tie_btn.click(
         tievote_last_response,
-        states + model_selectors,
-        [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        states + model_selectors + [textbox_feedback],
+        [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn, textbox_feedback, textbox_feedback],
     )
     bothbad_btn.click(
         bothbad_vote_last_response,
-        states + model_selectors,
-        [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        states + model_selectors + [textbox_feedback],
+        [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn, textbox_feedback, textbox_feedback],
     )
     regenerate_btn.click(
         regenerate, states, states + chatbots + [textbox] + btn_list
@@ -432,9 +441,9 @@ def build_side_by_side_ui_named(models):
         states + [temperature, top_p, max_output_tokens],
         states + chatbots + btn_list,
     ).then(
-        flash_buttons, [], btn_list
+        flash_buttons, [], btn_list + [textbox_feedback]
     )
-    clear_btn.click(clear_history, None, states + chatbots + [textbox] + btn_list)
+    clear_btn.click(clear_history, None, states + chatbots + [textbox] + btn_list + [textbox_feedback, textbox_feedback])
 
     share_js = """
 function (a, b, c, d) {
@@ -472,7 +481,7 @@ function (a, b, c, d) {
         states + [temperature, top_p, max_output_tokens],
         states + chatbots + btn_list,
     ).then(
-        flash_buttons, [], btn_list
+        flash_buttons, [], btn_list + [textbox_feedback]
     )
     send_btn.click(
         add_text,
@@ -483,7 +492,7 @@ function (a, b, c, d) {
         states + [temperature, top_p, max_output_tokens],
         states + chatbots + btn_list,
     ).then(
-        flash_buttons, [], btn_list
+        flash_buttons, [], btn_list + [textbox_feedback]
     )
 
     return states + model_selectors
