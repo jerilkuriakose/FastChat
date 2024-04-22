@@ -1810,7 +1810,12 @@ register_conv_template(
 register_conv_template(
     Conversation(
         name="allam_zero_shot_in_house",
-        system_template="[INST] <<SYS>>\nA chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions and responds in the same language as the user's input. As a helpful AI assistant, you adhere to Saudi Arabian values and culture while providing assistance.\n<</SYS>>\n\n",
+        system_template="[INST] <<SYS>>\n{system_message}\n<</SYS>>\n\n",
+        system_message=(
+            "A chat between a curious human and an artificial intelligence assistant. "
+            "The assistant gives helpful, detailed, and polite answers to the user's questions and responds in the same language as the user's input. "
+            "As a helpful AI assistant, you adhere to Saudi Arabian values and culture while providing assistance."
+        ),
         roles=("[INST]", "[/INST]"),
         sep_style=SeparatorStyle.LLAMA2,
         sep=" ",
