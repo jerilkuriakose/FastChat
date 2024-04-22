@@ -1803,7 +1803,7 @@ register_conv_template(
         roles=("Human", "Assistant"),
         sep_style=SeparatorStyle.ADD_COLON_SINGLE,
         sep="\n### ",
-        stop_str="###",
+        stop_str="</s>",
     )
 )
 
