@@ -1814,7 +1814,8 @@ register_conv_template(
         roles=("[INST]", "[/INST]"),
         sep_style=SeparatorStyle.LLAMA2,
         sep=" ",
-        sep2=" </s>",
+        sep2=" </s><s>",
+        stop_str="</s>"
     )
 )
 
