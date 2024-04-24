@@ -1824,6 +1824,18 @@ register_conv_template(
     )
 )
 
+register_conv_template(
+    Conversation(
+        name="allam_zero_shot_in_house_without_sys",
+        system_template="[INST]\n\n",
+        roles=("[INST]", "[/INST]"),
+        sep_style=SeparatorStyle.LLAMA2,
+        sep=" ",
+        sep2=" </s><s>",
+        stop_str="</s>"
+    )
+)
+
 if __name__ == "__main__":
     from fastchat.conversation import get_conv_template
 
