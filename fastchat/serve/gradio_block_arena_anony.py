@@ -568,7 +568,7 @@ Find out who is the 🥇LLM Champion!
         temperature = gr.Slider(
             minimum=0.0,
             maximum=1.0,
-            value=0.7,
+            value=0.6,
             step=0.1,
             interactive=True,
             label="Temperature",
@@ -576,7 +576,7 @@ Find out who is the 🥇LLM Champion!
         top_p = gr.Slider(
             minimum=0.0,
             maximum=1.0,
-            value=1.0,
+            value=0.98,
             step=0.1,
             interactive=True,
             label="Top P",
