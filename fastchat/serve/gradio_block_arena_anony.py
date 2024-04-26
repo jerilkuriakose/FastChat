@@ -308,7 +308,7 @@ def get_battle_pair():
         model_weights.append(weight)
     total_weight = np.sum(model_weights)
     model_weights = model_weights / total_weight
-    chosen_idx = np.random.choice(len(models), p=model_weights)
+    chosen_idx = np.random.choice(len(models), p=np.full(len(model_weights), 1 / len(model_weights)))
     chosen_model = models[chosen_idx]
     # for p, w in zip(models, model_weights):
     #     print(p, w)
@@ -331,7 +331,7 @@ def get_battle_pair():
     # for p, w in zip(rival_models, rival_weights):
     #     print(p, w)
     rival_weights = rival_weights / np.sum(rival_weights)
-    rival_idx = np.random.choice(len(rival_models), p=rival_weights)
+    rival_idx = np.random.choice(len(rival_models), p=np.full(len(rival_models), 1 / len(rival_models)))
     rival_model = rival_models[rival_idx]
 
     swap = np.random.randint(2)
