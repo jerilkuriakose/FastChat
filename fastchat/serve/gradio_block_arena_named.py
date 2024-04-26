@@ -381,7 +381,7 @@ def build_side_by_side_ui_named(models):
         temperature = gr.Slider(
             minimum=0.0,
             maximum=1.0,
-            value=0.7,
+            value=0.6,
             step=0.1,
             interactive=True,
             label="Temperature",
@@ -389,7 +389,7 @@ def build_side_by_side_ui_named(models):
         top_p = gr.Slider(
             minimum=0.0,
             maximum=1.0,
-            value=1.0,
+            value=0.98,
             step=0.1,
             interactive=True,
             label="Top P",
