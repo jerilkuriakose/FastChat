@@ -2422,15 +2422,39 @@ class AllamAdapter(BaseModelAdapter):
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("allam_zero_shot_in_house")
 
+
 class AllamAdapterNoSysMessage(BaseModelAdapter):
     """Model adapter for AceGPT model for ALLAM benchmark"""
 
     def match(self, model_path: str):
-        model_names = ["test_model"]
+        model_names = ["alm_test_model"]
         return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("allam_zero_shot_in_house_without_sys")
+
+
+class JaisOriginalEng(BaseModelAdapter):
+    """Model adapter for JAIS model English for MT-Bench """
+
+    def match(self, model_path: str):
+        model_names = ["core_jai_en"]
+        return any(substring in model_path.lower() for substring in model_names)
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("jais_default_en")
+
+
+class JaisOriginalAr(BaseModelAdapter):
+    """Model adapter for JAIS model Arabic for MT-Bench """
+
+    def match(self, model_path: str):
+        model_names = ["core_jai_ar"]
+        return any(substring in model_path.lower() for substring in model_names)
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("jais_default_ar")
+
 
 # Note: the registration order matters.
 # The one registered earlier has a higher matching priority.
@@ -2533,6 +2557,9 @@ register_model_adapter(SmaugChatAdapter)
 register_model_adapter(AceGPTAdapter)
 register_model_adapter(JaisAdapter)
 register_model_adapter(AllamAdapter)
+register_model_adapter(AllamAdapterNoSysMessage)
+register_model_adapter(JaisOriginalEng)
+register_model_adapter(JaisOriginalAr)
 
 # After all adapters, try the default base adapter.
 register_model_adapter(BaseModelAdapter)
