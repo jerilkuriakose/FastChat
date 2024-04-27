@@ -2402,7 +2402,7 @@ class AceGPTAdapter(BaseModelAdapter):
 
 
 class JaisAdapter(BaseModelAdapter):
-    """Model adapter for AceGPT model for ALLAM benchmark"""
+    """Model adapter for JAIS model for ALLAM benchmark"""
 
     def match(self, model_path: str):
         model_names = ["jais", "model_b"]
@@ -2413,7 +2413,7 @@ class JaisAdapter(BaseModelAdapter):
 
 
 class AllamAdapter(BaseModelAdapter):
-    """Model adapter for AceGPT model for ALLAM benchmark"""
+    """Model adapter for ALLaM model for ALLAM benchmark"""
 
     def match(self, model_path: str):
         model_names = ["allam", "model_a", "model_d", "model_e"]
@@ -2424,7 +2424,7 @@ class AllamAdapter(BaseModelAdapter):
 
 
 class AllamAdapterNoSysMessage(BaseModelAdapter):
-    """Model adapter for AceGPT model for ALLAM benchmark"""
+    """Model adapter for ALLaM model for MT-Bench benchmark"""
 
     def match(self, model_path: str):
         model_names = ["alm_test_model"]
@@ -2454,6 +2454,28 @@ class JaisOriginalAr(BaseModelAdapter):
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("jais_default_ar")
+
+
+class AceGPTOriginalEng(BaseModelAdapter):
+    """Model adapter for AceGPT model English for MT-Bench """
+
+    def match(self, model_path: str):
+        model_names = ["free_ace_en"]
+        return any(substring in model_path.lower() for substring in model_names)
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("acegpt_original_en")
+
+
+class AceGPTOriginalAr(BaseModelAdapter):
+    """Model adapter for AceGPT model English for MT-Bench """
+
+    def match(self, model_path: str):
+        model_names = ["free_ace_ar"]
+        return any(substring in model_path.lower() for substring in model_names)
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("acegpt_original_ar")
 
 
 # Note: the registration order matters.
@@ -2560,6 +2582,8 @@ register_model_adapter(AllamAdapter)
 register_model_adapter(AllamAdapterNoSysMessage)
 register_model_adapter(JaisOriginalEng)
 register_model_adapter(JaisOriginalAr)
+register_model_adapter(AceGPTOriginalEng)
+register_model_adapter(AceGPTOriginalAr)
 
 # After all adapters, try the default base adapter.
 register_model_adapter(BaseModelAdapter)
