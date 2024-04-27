@@ -1883,6 +1883,36 @@ register_conv_template(
     )
 )
 
+register_conv_template(
+    Conversation(
+        name="acegpt_original_ar",
+        system_template="[INST] <<SYS>>\n{system_message}\n<</SYS>>\n\n",
+        system_message=(
+            "أنت مساعد مفيد ومحترم وصادق. أجب دائما بأكبر قدر ممكن من المساعدة بينما تكون آمنا.  يجب ألا تتضمن إجاباتك أي محتوى ضار أو غير أخلاقي أو عنصري أو جنسي أو سام أو خطير أو غير قانوني. يرجى التأكد من أن ردودك غير متحيزة اجتماعيا وإيجابية بطبيعتها.\n\nإذا كان السؤال لا معنى له أو لم يكن متماسكا من الناحية الواقعية، اشرح السبب بدلا من الإجابة على شيء غير صحيح. إذا كنت لا تعرف إجابة سؤال ما، فيرجى عدم مشاركة معلومات خاطئة."
+        ),
+        roles=("[INST]", "[/INST]"),
+        sep_style=SeparatorStyle.LLAMA2,
+        sep=" ",
+        sep2=" </s><s>",
+        stop_str="</s>"
+    )
+)
+
+register_conv_template(
+    Conversation(
+        name="acegpt_original_en",
+        system_template="[INST] <<SYS>>\n{system_message}\n<</SYS>>\n\n",
+        system_message=(
+            "You are a helpful, respectful and honest assistant. Always respond as helpfully as possible while being safe. Your answers must not contain any harmful, immoral, racist, sexist, toxic, dangerous or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make sense or is not factually coherent, explain why rather than answering something that is not true. If you do not know the answer to a question, please do not share false information."
+        ),
+        roles=("[INST]", "[/INST]"),
+        sep_style=SeparatorStyle.LLAMA2,
+        sep=" ",
+        sep2=" </s><s>",
+        stop_str="</s>"
+    )
+)
+
 if __name__ == "__main__":
     from fastchat.conversation import get_conv_template
 
