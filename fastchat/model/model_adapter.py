@@ -2431,7 +2431,7 @@ class AllamAdapter(BaseModelAdapter):
         return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
-        return get_conv_template("allam_zero_shot_in_house_without_sys")
+        return get_conv_template("allam_zero_shot_in_house")
 
 
 class AllamAdapterNoSysMessage(BaseModelAdapter):
