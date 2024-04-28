@@ -2409,7 +2409,7 @@ class JaisAdapter(BaseModelAdapter):
         return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
-        return get_conv_template("jais_default_ar")
+        return get_conv_template("jais_en")
 
 
 class AllamAdapter(BaseModelAdapter):
