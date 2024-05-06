@@ -2451,23 +2451,22 @@ class JaisAdapterV1(BaseModelAdapter):
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("jais_en_v1")
         
+class AllamAdapterV1_12(BaseModelAdapter):
+    """Model adapter for ALLaM model for ALLAM benchmark"""
+
+    def match(self, model_path: str):
+        model_names = ["allam-13b-v1-12-0"]
+        return any(substring in model_path.lower() for substring in model_names)
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("allam_zero_shot_in_house_without_sys_v1_12")
+
 
 class AllamAdapter(BaseModelAdapter):
     """Model adapter for ALLaM model for ALLAM benchmark"""
 
     def match(self, model_path: str):
         model_names = ["allam", "model_a", "model_d", "model_e"]
-        return any(substring in model_path.lower() for substring in model_names)
-
-    def get_default_conv_template(self, model_path: str) -> Conversation:
-        return get_conv_template("allam_zero_shot_in_house")
-
-
-class AllamAdapterNoSysMessage(BaseModelAdapter):
-    """Model adapter for ALLaM model for MT-Bench benchmark"""
-
-    def match(self, model_path: str):
-        model_names = ["alm_test_model"]
         return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
@@ -2621,8 +2620,8 @@ register_model_adapter(SmaugChatAdapter)
 register_model_adapter(AceGPTAdapter)
 register_model_adapter(JaisAdapterV3)
 register_model_adapter(JaisAdapterV1)
+register_model_adapter(AllamAdapterV1_12)
 register_model_adapter(AllamAdapter)
-register_model_adapter(AllamAdapterNoSysMessage)
 register_model_adapter(JaisOriginalEng)
 register_model_adapter(JaisOriginalAr)
 register_model_adapter(AceGPTOriginalEng)
