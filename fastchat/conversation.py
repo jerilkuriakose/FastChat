@@ -1931,7 +1931,8 @@ register_conv_template(
 register_conv_template(
     Conversation(
         name="allam_zero_shot_in_house_without_sys",
-        system_template="[INST]\n\n",
+        system_template="<s>[INST]{system_message}",
+        system_message=" ",
         roles=("[INST]", "[/INST]"),
         sep_style=SeparatorStyle.LLAMA2,
         sep=" ",
@@ -1943,7 +1944,8 @@ register_conv_template(
 register_conv_template(
     Conversation(
         name="allam_zero_shot_in_house_without_sys_v1_12",
-        system_template="[INST]\n\n",
+        system_template="<s>{system_message}[INST] ",
+        system_message=" ",
         roles=(" [INST]", "[/INST]"),
         sep_style=SeparatorStyle.LLAMA2,
         sep=" ",
