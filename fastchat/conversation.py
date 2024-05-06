@@ -1942,6 +1942,18 @@ register_conv_template(
 
 register_conv_template(
     Conversation(
+        name="allam_zero_shot_in_house_without_sys_v1_12",
+        system_template=" [INST]\n\n",
+        roles=("[INST]", "[/INST]"),
+        sep_style=SeparatorStyle.LLAMA2,
+        sep=" ",
+        sep2=" </s><s>",
+        stop_str="</s>",
+    )
+)
+
+register_conv_template(
+    Conversation(
         name="acegpt_original_ar",
         system_template="[INST] <<SYS>>\n{system_message}\n<</SYS>>\n\n",
         system_message=(
