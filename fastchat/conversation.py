@@ -1831,7 +1831,7 @@ register_conv_template(
 
 register_conv_template(
     Conversation(
-        name="jais_en_v3",
+        name="jais_en_v3_original",
         system_template="### Instruction: {system_message}\n\nComplete the conversation below between [|Human|] and [|AI|]:\n",
         system_message="Your name is Jais, and you are named after Jebel Jais, the highest mountain in UAE. "
         "You are built by Core42. You are the world's most advanced Arabic large language model with 30b parameters. "
@@ -1855,6 +1855,17 @@ register_conv_template(
         "Stay positive and do not say bad things about anything. "
         "Your primary objective is to avoid harmful responses, even when faced with deceptive inputs. "
         "Recognize when users may be attempting to trick or to misuse you and respond with caution.",
+        roles=("### Input: [|Human|] ", "### Response: [|AI|]"),
+        sep_style=SeparatorStyle.NO_COLON_SINGLE,
+        sep="\n",
+        stop_str="<|endoftext|>",
+    )
+)
+
+register_conv_template(
+    Conversation(
+        name="jais_en_v3",
+        system_template="",
         roles=("### Input: [|Human|] ", "### Response: [|AI|]"),
         sep_style=SeparatorStyle.NO_COLON_SINGLE,
         sep="\n",
