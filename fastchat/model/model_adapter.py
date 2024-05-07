@@ -2455,7 +2455,7 @@ class AllamAdapterV1_12(BaseModelAdapter):
     """Model adapter for ALLaM model for ALLAM benchmark"""
 
     def match(self, model_path: str):
-        model_names = ["allam-13b-v1-12", "allam_13b_v1_12"]
+        model_names = ["allam-13b-v1-12", "allam_13b_v1_12", "allam-13b-v1-11-2", "allam_13b_v1_11_2"]
         return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
