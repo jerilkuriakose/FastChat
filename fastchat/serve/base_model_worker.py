@@ -155,8 +155,13 @@ class BaseModelWorker:
         try:
             input_ids = self.tokenizer(prompt).input_ids
             input_echo_len = len(input_ids)
-        except TypeError:
-            input_echo_len = self.tokenizer.num_tokens(prompt)
+        except Exception as e:
+            if "CachedSentencePieceProcessor" in str(e):
+                input_echo_len = len(self.tokenizer.encode_as_ids(prompt))
+            elif isinstance(e, TypeError):
+                input_echo_len = self.tokenizer.num_tokens(prompt)
+            else:
+                raise e
 
         ret = {
             "count": input_echo_len,
