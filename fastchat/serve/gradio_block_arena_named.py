@@ -343,6 +343,15 @@ def build_side_by_side_ui_named(models):
                         height=550,
                         show_copy_button=True,
                     )
+
+    with gr.Row():
+        textbox = gr.Textbox(
+            show_label=False,
+            placeholder="👉 Enter your prompt and press ENTER",
+            elem_id="input_box",
+        )
+        send_btn = gr.Button(value="Send", variant="primary", scale=0)
+
     with gr.Row():
         textbox_feedback = gr.Textbox(
             show_label=False,
@@ -363,19 +372,6 @@ def build_side_by_side_ui_named(models):
         bothbad_btn = gr.Button(
             value="👎  Both are bad", visible=False, interactive=False
         )
-
-    with gr.Row():
-        textbox = gr.Textbox(
-            show_label=False,
-            placeholder="👉 Enter your prompt and press ENTER",
-            elem_id="input_box",
-        )
-        send_btn = gr.Button(value="Send", variant="primary", scale=0)
-
-    with gr.Row() as button_row:
-        clear_btn = gr.Button(value="🗑️  Clear history", interactive=False)
-        regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=False)
-        share_btn = gr.Button(value="📷  Share")
 
     with gr.Accordion("Parameters", open=False) as parameter_row:
         temperature = gr.Slider(
@@ -402,6 +398,11 @@ def build_side_by_side_ui_named(models):
             interactive=True,
             label="Max output tokens",
         )
+
+    with gr.Row() as button_row:
+        clear_btn = gr.Button(value="🗑️  Clear history", interactive=False)
+        regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=False)
+        share_btn = gr.Button(value="📷  Share")
 
     gr.Markdown(acknowledgment_md, elem_id="ack_markdown")
 
