@@ -2456,7 +2456,12 @@ class AllamAdapterPatchV1_12(BaseModelAdapter):
     """Model adapter for ALLaM model for ALLAM benchmark"""
 
     def match(self, model_path: str):
-        model_names = ["allam_13b_v1_12_0_3", "allam-13b-v1-12-0-3"]
+        model_names = [
+            "allam_13b_v1_12_0_3",
+            "allam-13b-v1-12-0-3",
+            "allam_13b_v1_12_0_4",
+            "allam-13b-v1-12-0-4",
+        ]
         return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
@@ -2468,12 +2473,12 @@ class AllamAdapterV1_12(BaseModelAdapter):
 
     def match(self, model_path: str):
         model_names = [
-            "allam-13b-v1-12", 
-            "allam_13b_v1_12", 
-            "allam-13b-v1-11-2", 
+            "allam-13b-v1-12",
+            "allam_13b_v1_12",
+            "allam-13b-v1-11-2",
             "allam_13b_v1_11_2",
             "allam-13b-v1-12-0-3",
-            "allam_13b_v1_12_0_3"
+            "allam_13b_v1_12_0_3",
         ]
         return any(substring in model_path.lower() for substring in model_names)
 
@@ -2493,7 +2498,7 @@ class AllamAdapter(BaseModelAdapter):
 
 
 class JaisOriginalEng(BaseModelAdapter):
-    """Model adapter for JAIS model English for MT-Bench """
+    """Model adapter for JAIS model English for MT-Bench"""
 
     def match(self, model_path: str):
         model_names = ["core_jai_en"]
@@ -2504,7 +2509,7 @@ class JaisOriginalEng(BaseModelAdapter):
 
 
 class JaisOriginalAr(BaseModelAdapter):
-    """Model adapter for JAIS model Arabic for MT-Bench """
+    """Model adapter for JAIS model Arabic for MT-Bench"""
 
     def match(self, model_path: str):
         model_names = ["core_jai_ar"]
@@ -2515,7 +2520,7 @@ class JaisOriginalAr(BaseModelAdapter):
 
 
 class AceGPTOriginalEng(BaseModelAdapter):
-    """Model adapter for AceGPT model English for MT-Bench """
+    """Model adapter for AceGPT model English for MT-Bench"""
 
     def match(self, model_path: str):
         model_names = ["free_ace_en"]
@@ -2526,7 +2531,7 @@ class AceGPTOriginalEng(BaseModelAdapter):
 
 
 class AceGPTOriginalAr(BaseModelAdapter):
-    """Model adapter for AceGPT model English for MT-Bench """
+    """Model adapter for AceGPT model English for MT-Bench"""
 
     def match(self, model_path: str):
         model_names = ["free_ace_ar"]
