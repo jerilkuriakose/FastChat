@@ -1956,6 +1956,19 @@ register_conv_template(
 
 register_conv_template(
     Conversation(
+        name="allam_zero_shot_in_house_without_sys_v1_12_2",
+        system_template="<s>{system_message}[INST] ",
+        system_message=" ",
+        roles=(" [INST]", "[/INST]"),
+        sep_style=SeparatorStyle.LLAMA2,
+        sep=" ",
+        sep2=" </s><s>",
+        stop_str="</s>",
+    )
+)
+
+register_conv_template(
+    Conversation(
         name="allam_zero_shot_in_house_without_sys_v1_12_patch",
         system_template="<s>{system_message}[INST] ",
         system_message=" ",
