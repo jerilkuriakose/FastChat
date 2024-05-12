@@ -1950,7 +1950,7 @@ register_conv_template(
         sep_style=SeparatorStyle.LLAMA2,
         sep=" ",
         sep2=" </s><s>",
-        stop_str=["</s>", "</s"],
+        stop_str=["</s>", "</s", "</"],
     )
 )
 
