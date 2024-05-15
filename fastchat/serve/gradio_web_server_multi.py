@@ -137,8 +137,8 @@ window.__gradio_mode__ = "app";
     ) as demo:
         with gr.Tabs() as tabs:
             # with gr.Tab("Text Arena", id=0):
-            with gr.Tab("⚔️  Arena (battle)", id=0):
-                side_by_side_anony_list = build_side_by_side_ui_anony(models)
+            # with gr.Tab("⚔️  Arena (battle)", id=0):
+            #     side_by_side_anony_list = build_side_by_side_ui_anony(models)
 
             with gr.Tab("⚔️  Arena (side-by-side)", id=1):
                 side_by_side_named_list = build_side_by_side_ui_named(models)
@@ -151,7 +151,7 @@ window.__gradio_mode__ = "app";
             demo_tabs = (
                 [tabs]
                 + single_model_list
-                + side_by_side_anony_list
+                # + side_by_side_anony_list
                 + side_by_side_named_list
             )
 
