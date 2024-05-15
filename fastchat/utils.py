@@ -186,7 +186,7 @@ def moderation_filter(text, model_list, do_moderation=False):
     for keyword in MODEL_KEYWORDS:
         for model in model_list:
             if keyword in model:
-                do_moderation = True
+                do_moderation = False
                 break
 
     if do_moderation:

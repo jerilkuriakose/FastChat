@@ -38,6 +38,20 @@ def get_api_provider_stream_iter(
             api_base=model_api_dict["api_base"],
             api_key=model_api_dict["api_key"],
         )
+    elif model_api_dict["api_type"] == "azure":
+        if model_api_dict["vision-arena"]:
+            prompt = conv.to_openai_vision_api_messages()
+        else:
+            prompt = conv.to_openai_api_messages()
+        stream_iter = azure_openai_api_stream_iter(
+            model_api_dict["model_name"],
+            prompt,
+            temperature,
+            top_p,
+            max_new_tokens,
+            api_base=model_api_dict["api_base"],
+            api_key=model_api_dict["api_key"],
+        )
     elif model_api_dict["api_type"] == "openai_assistant":
         last_prompt = conv.messages[-2][1]
         stream_iter = openai_assistant_api_stream_iter(
@@ -231,6 +245,65 @@ def openai_api_stream_iter(
     res = client.chat.completions.create(
         model=model_name,
         messages=messages,
+        temperature=temperature,
+        max_tokens=max_new_tokens,
+        stream=True,
+    )
+    text = ""
+    for chunk in res:
+        if len(chunk.choices) > 0:
+            text += chunk.choices[0].delta.content or ""
+            data = {
+                "text": text,
+                "error_code": 0,
+            }
+            yield data
+
+
+def azure_openai_api_stream_iter(
+    model_name,
+    messages,
+    temperature,
+    top_p,
+    max_new_tokens,
+    api_base=None,
+    api_key=None,
+):
+    import openai
+
+    api_key = api_key or os.environ["OPENAI_API_KEY"]
+
+    client = openai.AzureOpenAI(
+        api_version="2023-07-01-preview",
+        azure_endpoint=api_base or "https://api.openai.com/v1",
+        api_key=api_key,
+    )
+
+    # Make requests for logging
+    text_messages = []
+    for message in messages:
+        if type(message["content"]) == str:  # text-only model
+            text_messages.append(message)
+        else:  # vision model
+            filtered_content_list = [
+                content for content in message["content"] if content["type"] == "text"
+            ]
+            text_messages.append(
+                {"role": message["role"], "content": filtered_content_list}
+            )
+
+    gen_params = {
+        "model": model_name,
+        "prompt": text_messages,
+        "temperature": temperature,
+        "top_p": top_p,
+        "max_new_tokens": max_new_tokens,
+    }
+    logger.info(f"==== request ====\n{gen_params}")
+
+    res = client.chat.completions.create(
+        model="gpt-4-900ptu",
+        messages=text_messages,
         temperature=temperature,
         max_tokens=max_new_tokens,
         stream=True,
