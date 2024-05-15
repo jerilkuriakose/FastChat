@@ -2396,6 +2396,17 @@ class CohereAdapter(BaseModelAdapter):
         return get_conv_template("api_based_default")
 
 
+class CohereAdapterAllam(BaseModelAdapter):
+    """The model adapter for Cohere for Allam chatarena"""
+
+    def match(self, model_path: str):
+        model_names = ["command-r"]
+        return any(substring in model_path.lower() for substring in model_names)
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("command_r")
+
+
 class DBRXAdapter(BaseModelAdapter):
     """The model adapter for Cohere"""
 
@@ -2667,6 +2678,7 @@ register_model_adapter(LlavaAdapter)
 register_model_adapter(YuanAdapter)
 register_model_adapter(OlmoAdapter)
 register_model_adapter(CohereAdapter)
+register_model_adapter(CohereAdapterAllam)
 register_model_adapter(DBRXAdapter)
 register_model_adapter(GemmaAdapter)
 register_model_adapter(YandexGPTAdapter)

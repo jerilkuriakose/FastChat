@@ -2162,6 +2162,21 @@ register_conv_template(
 
 register_conv_template(
     Conversation(
+        name="command_r",
+        system_template="<BOS_TOKEN><|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>{system_message}<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|>",
+        system_message=(
+            "You are Command-R, a brilliant, sophisticated, AI-assistant trained to assist human users by providing thorough responses. You are trained by Cohere."
+        ),
+        roles=("<|USER_TOKEN|>", "<|CHATBOT_TOKEN|>"),
+        sep_style=SeparatorStyle.NO_COLON_SINGLE,
+        # sep=" ",
+        sep="<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|>",
+        stop_str="<|END_OF_TURN_TOKEN|>",
+    )
+)
+
+register_conv_template(
+    Conversation(
         name="allam_zero_shot_in_house_without_sys",
         system_template="<s>[INST]{system_message}",
         system_message=" ",
