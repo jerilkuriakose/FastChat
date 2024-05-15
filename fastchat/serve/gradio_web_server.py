@@ -66,18 +66,7 @@ Please do not upload any private information.
 The service collects user dialogue data, including both text and images, and reserves the right to distribute it under a Creative Commons Attribution (CC-BY) or a similar license.
 
 ### Acknowledgment
-We thank [UC Berkeley SkyLab](https://sky.cs.berkeley.edu/), [Kaggle](https://www.kaggle.com/), [MBZUAI](https://mbzuai.ac.ae/), [a16z](https://www.a16z.com/), [Together AI](https://www.together.ai/), [Hyperbolic](https://hyperbolic.xyz/), [Anyscale](https://www.anyscale.com/), [HuggingFace](https://huggingface.co/) for their generous [sponsorship](https://lmsys.org/donations/).
-
-<div class="sponsor-image-about">
-    <img src="https://storage.googleapis.com/public-arena-asset/skylab.png" alt="SkyLab">
-    <img src="https://storage.googleapis.com/public-arena-asset/kaggle.png" alt="Kaggle">
-    <img src="https://storage.googleapis.com/public-arena-asset/mbzuai.jpeg" alt="MBZUAI">
-    <img src="https://storage.googleapis.com/public-arena-asset/a16z.jpeg" alt="a16z">
-    <img src="https://storage.googleapis.com/public-arena-asset/together.png" alt="Together AI">
-    <img src="https://storage.googleapis.com/public-arena-asset/hyperbolic_logo.png" alt="Hyperbolic">
-    <img src="https://storage.googleapis.com/public-arena-asset/anyscale.png" alt="AnyScale">
-    <img src="https://storage.googleapis.com/public-arena-asset/huggingface.png" alt="HuggingFace">
-</div>
+This is a fork of [FastChat](https://github.com/lm-sys/FastChat/tree/main)
 """
 
 # JSON file format of API-based models:
@@ -751,10 +740,6 @@ We also thank [UC Berkeley SkyLab](https://sky.cs.berkeley.edu/), [Kaggle](https
 def build_single_model_ui(models, add_promotion_links=False):
     promotion = (
         """
-- | [GitHub](https://github.com/lm-sys/FastChat) | [Dataset](https://github.com/lm-sys/FastChat/blob/main/docs/dataset_release.md) | [Twitter](https://twitter.com/lmsysorg) | [Discord](https://discord.gg/HSWAKCrnFx) |
-- Introducing Llama 2: The Next Generation Open Source Large Language Model. [[Website]](https://ai.meta.com/llama/)
-- Vicuna: An Open-Source Chatbot Impressing GPT-4 with 90% ChatGPT Quality. [[Blog]](https://lmsys.org/blog/2023-03-30-vicuna/)
-
 ## 🤖 Choose any model to chat
 """
         if add_promotion_links
@@ -762,7 +747,7 @@ def build_single_model_ui(models, add_promotion_links=False):
     )
 
     notice_markdown = f"""
-# 🏔️ Chat with Open Large Language Models
+# 🏔️ Chat with Large Language Models
 {promotion}
 """
 
