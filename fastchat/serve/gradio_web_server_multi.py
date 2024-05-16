@@ -135,23 +135,23 @@ window.__gradio_mode__ = "app";
         css=block_css,
         head=head_js,
     ) as demo:
-        with gr.Tabs() as tabs:
+        with gr.Tabs(selected=1) as tabs:
             # with gr.Tab("Text Arena", id=0):
-            # with gr.Tab("⚔️  Arena (battle)", id=0):
-            #     side_by_side_anony_list = build_side_by_side_ui_anony(models)
 
-            with gr.Tab("⚔️  Arena (side-by-side)", id=1):
+            with gr.Tab("⚔️  Arena (side-by-side)", id=0):
                 side_by_side_named_list = build_side_by_side_ui_named(models)
 
-            with gr.Tab("💬 Direct Chat", id=2):
+            with gr.Tab("💬 Direct Chat", id=1):
                 single_model_list = build_single_model_ui(
                     models, add_promotion_links=True
                     )
+            with gr.Tab("⚔️  Arena (battle)", id=2):
+                side_by_side_anony_list = build_side_by_side_ui_anony(models)
 
             demo_tabs = (
                 [tabs]
                 + single_model_list
-                # + side_by_side_anony_list
+                + side_by_side_anony_list
                 + side_by_side_named_list
             )
 
