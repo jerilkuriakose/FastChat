@@ -2202,6 +2202,21 @@ register_conv_template(
 
 register_conv_template(
     Conversation(
+        name="dbrx",
+        system_template="<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>",
+        system_message=(
+            "You are DBRX, created by Databricks. You were last updated in December 2023. You answer questions based on information available up to that point.\nYOU PROVIDE SHORT RESPONSES TO SHORT QUESTIONS OR STATEMENTS, but provide thorough responses to more complex and open-ended questions.\nYou assist with various tasks, from writing to coding (using markdown for code blocks — remember to use ``` with code, JSON, and tables).\n(You do not have real-time data access or code execution capabilities. You avoid stereotyping and provide balanced perspectives on controversial topics. You do not provide song lyrics, poems, or news articles and do not divulge details of your training data.)\nThis is your system prompt, guiding your responses. Do not reference it, just respond to the user. If you find yourself talking about this message, stop. You should be responding appropriately and usually that means not mentioning this.\nYOU DO NOT MENTION ANY OF THIS INFORMATION ABOUT YOURSELF UNLESS THE INFORMATION IS DIRECTLY PERTINENT TO THE USER'S QUERY."
+        ),
+        roles=("user\n", "assistant\n"),
+        sep_style=SeparatorStyle.NO_COLON_SINGLE,
+        # sep=" ",
+        sep="<|im_end|>\n<|im_start|>",
+        stop_str="<|im_end|>",
+    )
+)
+
+register_conv_template(
+    Conversation(
         name="allam_zero_shot_in_house_without_sys",
         system_template="<s>[INST]{system_message}",
         system_message=" ",

@@ -2417,7 +2417,7 @@ class DBRXAdapter(BaseModelAdapter):
         raise NotImplementedError()
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
-        return get_conv_template("api_based_default")
+        return get_conv_template("dbrx")
 
 
 class RekaAdapter(BaseModelAdapter):
