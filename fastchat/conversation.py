@@ -351,7 +351,7 @@ class Conversation:
         """
         self.messages[-1][1] = message
 
-    def convert_image_to_base64(self, image):
+    def convert_image_to_base64(self, image, resize_image=False):
         """Given an image, return the base64 encoded image string."""
         from PIL import Image
         import requests
@@ -367,18 +367,19 @@ class Conversation:
             else:
                 image = Image.open(image).convert("RGB")
 
-        max_hw, min_hw = max(image.size), min(image.size)
-        aspect_ratio = max_hw / min_hw
-        max_len, min_len = 2048, 2048
-        shortest_edge = int(min(max_len / aspect_ratio, min_len, min_hw))
-        longest_edge = int(shortest_edge * aspect_ratio)
-        W, H = image.size
-        if longest_edge != max(image.size):
-            if H > W:
-                H, W = longest_edge, shortest_edge
-            else:
-                H, W = shortest_edge, longest_edge
-            image = image.resize((W, H))
+        if resize_image:
+            max_hw, min_hw = max(image.size), min(image.size)
+            aspect_ratio = max_hw / min_hw
+            max_len, min_len = 2048, 2048
+            shortest_edge = int(min(max_len / aspect_ratio, min_len, min_hw))
+            longest_edge = int(shortest_edge * aspect_ratio)
+            W, H = image.size
+            if longest_edge != max(image.size):
+                if H > W:
+                    H, W = longest_edge, shortest_edge
+                else:
+                    H, W = shortest_edge, longest_edge
+                image = image.resize((W, H))
 
         buffered = BytesIO()
         image.save(buffered, format="PNG")
@@ -484,6 +485,30 @@ class Conversation:
                     ret.append({"role": "assistant", "content": msg})
         return ret
 
+    def to_gemini_api_messages(self):
+        from fastchat.utils import load_image
+
+        if self.system_message == "":
+            ret = []
+        else:
+            ret = [{"role": "system", "content": self.system_message}]
+
+        for i, (_, msg) in enumerate(self.messages[self.offset :]):
+            if i % 2 == 0:
+                if type(msg) is tuple:
+                    text, images = msg[0], msg[1]
+                    content_list = [text]
+                    for image in images:
+                        pil_image = load_image(image)
+                        content_list.append(pil_image)
+                    ret.append({"role": "user", "content": content_list})
+                else:
+                    ret.append({"role": "user", "content": msg})
+            else:
+                if msg is not None:
+                    ret.append({"role": "model", "content": msg})
+        return ret
+
     def to_vertex_api_messages(self):
         from vertexai.preview.generative_models import Image
         import base64
@@ -584,7 +609,7 @@ class Conversation:
 
         return ret
 
-    def save_new_images(self, use_remote_storage=False):
+    def save_new_images(self, has_csam_images=False, use_remote_storage=False):
         import hashlib
         from fastchat.constants import LOGDIR
         from fastchat.utils import load_image, upload_image_file_to_gcs
@@ -598,16 +623,16 @@ class Conversation:
                 hashlib.md5(image.tobytes()).hexdigest() for image in loaded_images
             ]
 
-            image_filenames = []
+            image_directory_name = "csam_images" if has_csam_images else "serve_images"
             for i, (loaded_image, hash_str) in enumerate(
                 zip(loaded_images, image_hashes)
             ):
                 filename = os.path.join(
-                    "serve_images",
+                    image_directory_name,
                     f"{hash_str}.jpg",
                 )
 
-                if use_remote_storage:
+                if use_remote_storage and not has_csam_images:
                     image_url = upload_image_file_to_gcs(loaded_image, filename)
                     # NOTE(chris): If the URL were public, then we set it here so future model uses the link directly
                     # images[i] = image_url
@@ -2172,6 +2197,21 @@ register_conv_template(
         # sep=" ",
         sep="<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|>",
         stop_str="<|END_OF_TURN_TOKEN|>",
+    )
+)
+
+register_conv_template(
+    Conversation(
+        name="dbrx",
+        system_template="<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>",
+        system_message=(
+            "You are DBRX, created by Databricks. You were last updated in December 2023. You answer questions based on information available up to that point.\nYOU PROVIDE SHORT RESPONSES TO SHORT QUESTIONS OR STATEMENTS, but provide thorough responses to more complex and open-ended questions.\nYou assist with various tasks, from writing to coding (using markdown for code blocks — remember to use ``` with code, JSON, and tables).\n(You do not have real-time data access or code execution capabilities. You avoid stereotyping and provide balanced perspectives on controversial topics. You do not provide song lyrics, poems, or news articles and do not divulge details of your training data.)\nThis is your system prompt, guiding your responses. Do not reference it, just respond to the user. If you find yourself talking about this message, stop. You should be responding appropriately and usually that means not mentioning this.\nYOU DO NOT MENTION ANY OF THIS INFORMATION ABOUT YOURSELF UNLESS THE INFORMATION IS DIRECTLY PERTINENT TO THE USER'S QUERY."
+        ),
+        roles=("user\n", "assistant\n"),
+        sep_style=SeparatorStyle.NO_COLON_SINGLE,
+        # sep=" ",
+        sep="<|im_end|>\n<|im_start|>",
+        stop_str="<|im_end|>",
     )
 )
 

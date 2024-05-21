@@ -386,7 +386,7 @@ def add_text(
     all_conv_text = (
         all_conv_text_left[-1000:] + all_conv_text_right[-1000:] + "\nuser: " + text
     )
-    flagged = moderation_filter(all_conv_text, model_list, do_moderation=True)
+    flagged = moderation_filter(all_conv_text, model_list, do_moderation=False)
     if flagged:
         logger.info(f"violate moderation (anony). ip: {ip}. text: {text}")
         # overwrite the original text
@@ -410,7 +410,9 @@ def add_text(
 
     text = text[:BLIND_MODE_INPUT_CHAR_LEN_LIMIT]  # Hard cut-off
     for i in range(num_sides):
-        post_processed_text = _prepare_text_with_image(states[i], text, image)
+        post_processed_text = _prepare_text_with_image(
+            states[i], text, image, csam_flag=False
+        )
         states[i].conv.append_message(states[i].conv.roles[0], post_processed_text)
         states[i].conv.append_message(states[i].conv.roles[1], None)
         states[i].skip_next = False
@@ -474,7 +476,8 @@ def bot_response_multi(
                 "gemini-pro",
                 "gemini-pro-dev-api",
                 "gemini-1.0-pro-vision",
-                "gemini-1.5-pro-preview-0409",
+                "gemini-1.5-pro",
+                "gemini-1.5-flash",
                 "gemma-1.1-2b-it",
                 "gemma-1.1-7b-it",
             ]
@@ -501,17 +504,12 @@ def bot_response_multi(
 
 def build_side_by_side_ui_anony(models):
     notice_markdown = """
-# ⚔️  LMSYS Chatbot Arena: Benchmarking LLMs in the Wild
-- | [Blog](https://lmsys.org/blog/2023-05-03-arena/) | [GitHub](https://github.com/lm-sys/FastChat) | [Paper](https://arxiv.org/abs/2306.05685) | [Dataset](https://github.com/lm-sys/FastChat/blob/main/docs/dataset_release.md) | [Twitter](https://twitter.com/lmsysorg) | [Discord](https://discord.gg/HSWAKCrnFx) |
+# ⚔️  Chatbot Arena: Benchmarking LLMs in the Wild
 
 ## 📜 Rules
-- Ask any question to two anonymous models (e.g., ChatGPT, Claude, Llama) and vote for the better one!
+- Ask any question to two anonymous models and vote for the better one!
 - You can continue chatting until you identify a winner.
 - Vote won't be counted if model identity is revealed during conversation.
-
-## 🏆 LMSYS Arena [Leaderboard](https://leaderboard.lmsys.org)
-We've collected **500K+** human votes to compute an LLM Elo leaderboard.
-Find out who is the 🥇LLM Champion!
 
 ## 👇 Chat now!
 """
