@@ -2507,7 +2507,7 @@ class AllamAdapterV1_12_2(BaseModelAdapter):
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("allam_zero_shot_in_house_without_sys_v1_12_2")
-    
+
 
 class AllamAdapterV1_12(BaseModelAdapter):
     """Model adapter for ALLaM model for ALLAM benchmark"""
@@ -2537,7 +2537,7 @@ class AllamAdapter(BaseModelAdapter):
         return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
-        return get_conv_template("allam_zero_shot_in_house_without_sys")
+        return get_conv_template("allam_zero_shot_in_house_without_sys_v1_12")
 
 
 class JaisOriginalEng(BaseModelAdapter):
