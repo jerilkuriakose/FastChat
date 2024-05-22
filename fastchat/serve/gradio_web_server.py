@@ -217,7 +217,7 @@ def load_demo(url_params, request: gr.Request):
     return load_demo_single(models, url_params)
 
 
-def vote_last_response(state, vote_type, model_selector, request: gr.Request):
+def vote_last_response(state, vote_type, model_selector, request: gr.Request, feedback=''):
     filename = get_conv_log_filename()
     if "llava" in model_selector:
         filename = filename.replace("2024", "vision-tmp-2024")
@@ -229,30 +229,31 @@ def vote_last_response(state, vote_type, model_selector, request: gr.Request):
             "model": model_selector,
             "state": state.dict(),
             "ip": get_ip(request),
+            "feedback": feedback,
         }
         fout.write(json.dumps(data) + "\n")
     get_remote_logger().log(data)
 
 
-def upvote_last_response(state, model_selector, request: gr.Request):
+def upvote_last_response(state, model_selector, tb_feedback, request: gr.Request):
     ip = get_ip(request)
     logger.info(f"upvote. ip: {ip}")
-    vote_last_response(state, "upvote", model_selector, request)
-    return ("",) + (disable_btn,) * 3
+    vote_last_response(state, "upvote", model_selector, request, feedback=tb_feedback.strip())
+    return ("",) + (disable_btn,) * 3 + ("", invisible_btn)
 
 
-def downvote_last_response(state, model_selector, request: gr.Request):
+def downvote_last_response(state, model_selector, tb_feedback, request: gr.Request):
     ip = get_ip(request)
     logger.info(f"downvote. ip: {ip}")
-    vote_last_response(state, "downvote", model_selector, request)
-    return ("",) + (disable_btn,) * 3
+    vote_last_response(state, "downvote", model_selector, request, feedback=tb_feedback.strip())
+    return ("",) + (disable_btn,) * 3 + ("", invisible_btn)
 
 
-def flag_last_response(state, model_selector, request: gr.Request):
+def flag_last_response(state, model_selector, tb_feedback, request: gr.Request):
     ip = get_ip(request)
     logger.info(f"flag. ip: {ip}")
-    vote_last_response(state, "flag", model_selector, request)
-    return ("",) + (disable_btn,) * 3
+    vote_last_response(state, "flag", model_selector, request, feedback=tb_feedback.strip())
+    return ("",) + (disable_btn,) * 3 + ("", invisible_btn)
 
 
 def regenerate(state, request: gr.Request):
@@ -269,7 +270,7 @@ def clear_history(request: gr.Request):
     ip = get_ip(request)
     logger.info(f"clear_history. ip: {ip}")
     state = None
-    return (state, [], "", None) + (disable_btn,) * 5
+    return (state, [], "", None) + (disable_btn,) * 5 + ("", invisible_btn)
 
 
 def get_ip(request: gr.Request):
@@ -308,6 +309,16 @@ def _prepare_text_with_image(state, text, images, csam_flag):
         text = text, [image]
 
     return text
+
+
+def flash_buttons():
+    btn_updates = [
+        [disable_btn] * 2 + [enable_btn] * 3 + [enable_btn],
+        [enable_btn] * 5 + [enable_btn],
+    ]
+    for i in range(4):
+        yield btn_updates[i % 2]
+        time.sleep(0.3)
 
 
 def add_text(state, model_selector, text, image, request: gr.Request):
@@ -802,6 +813,15 @@ def build_single_model_ui(models, add_promotion_links=False):
         )
         send_btn = gr.Button(value="Send", variant="primary", scale=0)
 
+    with gr.Row():
+        textbox_feedback = gr.Textbox(
+            show_label=False,
+            placeholder="Enter your JUSTIFICATION",
+            elem_id="input_box_feedback",
+            visible=False,
+            interactive=False
+        )
+    
     with gr.Row() as button_row:
         upvote_btn = gr.Button(value="👍  Upvote", interactive=False)
         downvote_btn = gr.Button(value="👎  Downvote", interactive=False)
@@ -843,18 +863,18 @@ def build_single_model_ui(models, add_promotion_links=False):
     btn_list = [upvote_btn, downvote_btn, flag_btn, regenerate_btn, clear_btn]
     upvote_btn.click(
         upvote_last_response,
-        [state, model_selector],
-        [textbox, upvote_btn, downvote_btn, flag_btn],
+        [state, model_selector] + [textbox_feedback],
+        [textbox, upvote_btn, downvote_btn, flag_btn, textbox_feedback, textbox_feedback],
     )
     downvote_btn.click(
         downvote_last_response,
-        [state, model_selector],
-        [textbox, upvote_btn, downvote_btn, flag_btn],
+        [state, model_selector] + [textbox_feedback],
+        [textbox, upvote_btn, downvote_btn, flag_btn, textbox_feedback, textbox_feedback],
     )
     flag_btn.click(
         flag_last_response,
-        [state, model_selector],
-        [textbox, upvote_btn, downvote_btn, flag_btn],
+        [state, model_selector] + [textbox_feedback],
+        [textbox, upvote_btn, downvote_btn, flag_btn, textbox_feedback, textbox_feedback],
     )
     regenerate_btn.click(
         regenerate, state, [state, chatbot, textbox, imagebox] + btn_list
@@ -863,7 +883,7 @@ def build_single_model_ui(models, add_promotion_links=False):
         [state, temperature, top_p, max_output_tokens],
         [state, chatbot] + btn_list,
     )
-    clear_btn.click(clear_history, None, [state, chatbot, textbox, imagebox] + btn_list)
+    clear_btn.click(clear_history, None, [state, chatbot, textbox, imagebox] + btn_list + [textbox_feedback, textbox_feedback])
 
     model_selector.change(
         clear_history, None, [state, chatbot, textbox, imagebox] + btn_list
@@ -877,6 +897,8 @@ def build_single_model_ui(models, add_promotion_links=False):
         bot_response,
         [state, temperature, top_p, max_output_tokens],
         [state, chatbot] + btn_list,
+    ).then(
+        flash_buttons, [], btn_list + [textbox_feedback]
     )
     send_btn.click(
         add_text,
@@ -886,6 +908,8 @@ def build_single_model_ui(models, add_promotion_links=False):
         bot_response,
         [state, temperature, top_p, max_output_tokens],
         [state, chatbot] + btn_list,
+    ).then(
+        flash_buttons, [], btn_list + [textbox_feedback]
     )
 
     return [state, model_selector]
