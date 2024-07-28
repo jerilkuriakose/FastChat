@@ -302,7 +302,7 @@ def azure_openai_api_stream_iter(
     logger.info(f"==== request ====\n{gen_params}")
 
     res = client.chat.completions.create(
-        model="gpt-4-900ptu",
+        model=model_name,
         messages=text_messages,
         temperature=temperature,
         max_tokens=max_new_tokens,
