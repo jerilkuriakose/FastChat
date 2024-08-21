@@ -2584,6 +2584,16 @@ class AceGPTOriginalAr(BaseModelAdapter):
         return get_conv_template("acegpt_original_ar")
 
 
+class SilmaAdapter(BaseModelAdapter):
+    """Model adapter for AceGPT model English for MT-Bench"""
+
+    def match(self, model_path: str):
+        return "silma" in model_path.lower()
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("gemma")
+
+
 # Note: the registration order matters.
 # The one registered earlier has a higher matching priority.
 register_model_adapter(PeftModelAdapter)
@@ -2697,6 +2707,7 @@ register_model_adapter(JaisOriginalEng)
 register_model_adapter(JaisOriginalAr)
 register_model_adapter(AceGPTOriginalEng)
 register_model_adapter(AceGPTOriginalAr)
+register_model_adapter(SilmaAdapter)
 
 # After all adapters, try the default base adapter.
 register_model_adapter(BaseModelAdapter)
