@@ -406,6 +406,11 @@ def build_side_by_side_ui_named(models):
             value="👎  Both are bad", visible=False, interactive=False
         )
 
+    with gr.Row() as button_row:
+        clear_btn = gr.Button(value="🗑️  Clear history", interactive=False)
+        regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=False)
+        share_btn = gr.Button(value="📷  Share")
+
     with gr.Accordion("Parameters", open=False) as parameter_row:
         sys_msg_textbox = gr.Textbox(
             show_label=False,
@@ -436,11 +441,6 @@ def build_side_by_side_ui_named(models):
             interactive=True,
             label="Max output tokens",
         )
-
-    with gr.Row() as button_row:
-        clear_btn = gr.Button(value="🗑️  Clear history", interactive=False)
-        regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=False)
-        share_btn = gr.Button(value="📷  Share")
 
     gr.Markdown(acknowledgment_md, elem_id="ack_markdown")
 
