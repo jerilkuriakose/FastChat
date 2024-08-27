@@ -2463,6 +2463,24 @@ class JaisAdapterV1(BaseModelAdapter):
         return get_conv_template("jais_en_v1")
 
 
+class AllamAdapterWithSys(BaseModelAdapter):
+    """Model adapter for ALLaM model for ALLAM benchmark"""
+
+    def match(self, model_path: str):
+        model_names = [
+            "allam_13b_v2_24",
+            "allam-13b-v2-24",
+            "allam_13b_v2_25",
+            "allam-13b-v2-25",
+            "allam_13b_v2_26",
+            "allam-13b-v2-26",
+        ]
+        return any(substring in model_path.lower() for substring in model_names)
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("allam_zero_shot_in_house_with_sys_v2_26")
+
+
 class AllamAdapterPromptPatchV1_12(BaseModelAdapter):
     """Model adapter for ALLaM model for ALLAM benchmark"""
 
@@ -2698,6 +2716,7 @@ register_model_adapter(SmaugChatAdapter)
 register_model_adapter(AceGPTAdapter)
 register_model_adapter(JaisAdapterV3)
 register_model_adapter(JaisAdapterV1)
+register_model_adapter(AllamAdapterWithSys)
 register_model_adapter(AllamAdapterV1_12_2)
 register_model_adapter(AllamAdapterPromptPatchV1_12)
 register_model_adapter(AllamAdapterPatchV1_12)

@@ -217,7 +217,9 @@ def load_demo(url_params, request: gr.Request):
     return load_demo_single(models, url_params)
 
 
-def vote_last_response(state, vote_type, model_selector, request: gr.Request, feedback=''):
+def vote_last_response(
+    state, vote_type, model_selector, request: gr.Request, feedback=""
+):
     filename = get_conv_log_filename()
     if "llava" in model_selector:
         filename = filename.replace("2024", "vision-tmp-2024")
@@ -238,21 +240,27 @@ def vote_last_response(state, vote_type, model_selector, request: gr.Request, fe
 def upvote_last_response(state, model_selector, tb_feedback, request: gr.Request):
     ip = get_ip(request)
     logger.info(f"upvote. ip: {ip}")
-    vote_last_response(state, "upvote", model_selector, request, feedback=tb_feedback.strip())
+    vote_last_response(
+        state, "upvote", model_selector, request, feedback=tb_feedback.strip()
+    )
     return ("",) + (disable_btn,) * 3 + ("", invisible_btn)
 
 
 def downvote_last_response(state, model_selector, tb_feedback, request: gr.Request):
     ip = get_ip(request)
     logger.info(f"downvote. ip: {ip}")
-    vote_last_response(state, "downvote", model_selector, request, feedback=tb_feedback.strip())
+    vote_last_response(
+        state, "downvote", model_selector, request, feedback=tb_feedback.strip()
+    )
     return ("",) + (disable_btn,) * 3 + ("", invisible_btn)
 
 
 def flag_last_response(state, model_selector, tb_feedback, request: gr.Request):
     ip = get_ip(request)
     logger.info(f"flag. ip: {ip}")
-    vote_last_response(state, "flag", model_selector, request, feedback=tb_feedback.strip())
+    vote_last_response(
+        state, "flag", model_selector, request, feedback=tb_feedback.strip()
+    )
     return ("",) + (disable_btn,) * 3 + ("", invisible_btn)
 
 
@@ -321,7 +329,7 @@ def flash_buttons():
         time.sleep(0.3)
 
 
-def add_text(state, model_selector, text, image, request: gr.Request):
+def add_text(state, model_selector, text, image, sys_msg, request: gr.Request):
     ip = get_ip(request)
     logger.info(f"add_text. ip: {ip}. len: {len(text)}")
 
@@ -332,6 +340,9 @@ def add_text(state, model_selector, text, image, request: gr.Request):
         state.skip_next = True
         return (state, state.to_gradio_chatbot(), "", None) + (no_change_btn,) * 5
 
+    if sys_msg:
+        system_message = f"{sys_msg}"
+        state.conv.set_system_message(system_message)
     all_conv_text = state.conv.get_prompt()
     all_conv_text = all_conv_text[-2000:] + "\nuser: " + text
     flagged = moderation_filter(all_conv_text, [state.model_name])
@@ -819,9 +830,9 @@ def build_single_model_ui(models, add_promotion_links=False):
             placeholder="Enter your JUSTIFICATION",
             elem_id="input_box_feedback",
             visible=False,
-            interactive=False
+            interactive=False,
         )
-    
+
     with gr.Row() as button_row:
         upvote_btn = gr.Button(value="👍  Upvote", interactive=False)
         downvote_btn = gr.Button(value="👎  Downvote", interactive=False)
@@ -830,6 +841,11 @@ def build_single_model_ui(models, add_promotion_links=False):
         clear_btn = gr.Button(value="🗑️  Clear history", interactive=False)
 
     with gr.Accordion("Parameters", open=False) as parameter_row:
+        sys_msg_textbox = gr.Textbox(
+            show_label=False,
+            placeholder="👉 Enter your System Message",
+            elem_id="sys_msg_input_box",
+        )
         temperature = gr.Slider(
             minimum=0.0,
             maximum=1.0,
@@ -864,17 +880,38 @@ def build_single_model_ui(models, add_promotion_links=False):
     upvote_btn.click(
         upvote_last_response,
         [state, model_selector] + [textbox_feedback],
-        [textbox, upvote_btn, downvote_btn, flag_btn, textbox_feedback, textbox_feedback],
+        [
+            textbox,
+            upvote_btn,
+            downvote_btn,
+            flag_btn,
+            textbox_feedback,
+            textbox_feedback,
+        ],
     )
     downvote_btn.click(
         downvote_last_response,
         [state, model_selector] + [textbox_feedback],
-        [textbox, upvote_btn, downvote_btn, flag_btn, textbox_feedback, textbox_feedback],
+        [
+            textbox,
+            upvote_btn,
+            downvote_btn,
+            flag_btn,
+            textbox_feedback,
+            textbox_feedback,
+        ],
     )
     flag_btn.click(
         flag_last_response,
         [state, model_selector] + [textbox_feedback],
-        [textbox, upvote_btn, downvote_btn, flag_btn, textbox_feedback, textbox_feedback],
+        [
+            textbox,
+            upvote_btn,
+            downvote_btn,
+            flag_btn,
+            textbox_feedback,
+            textbox_feedback,
+        ],
     )
     regenerate_btn.click(
         regenerate, state, [state, chatbot, textbox, imagebox] + btn_list
@@ -883,7 +920,13 @@ def build_single_model_ui(models, add_promotion_links=False):
         [state, temperature, top_p, max_output_tokens],
         [state, chatbot] + btn_list,
     )
-    clear_btn.click(clear_history, None, [state, chatbot, textbox, imagebox] + btn_list + [textbox_feedback, textbox_feedback])
+    clear_btn.click(
+        clear_history,
+        None,
+        [state, chatbot, textbox, imagebox]
+        + btn_list
+        + [textbox_feedback, textbox_feedback],
+    )
 
     model_selector.change(
         clear_history, None, [state, chatbot, textbox, imagebox] + btn_list
@@ -891,26 +934,22 @@ def build_single_model_ui(models, add_promotion_links=False):
 
     textbox.submit(
         add_text,
-        [state, model_selector, textbox, imagebox],
+        [state, model_selector, textbox, imagebox, sys_msg_textbox],
         [state, chatbot, textbox, imagebox] + btn_list,
     ).then(
         bot_response,
         [state, temperature, top_p, max_output_tokens],
         [state, chatbot] + btn_list,
-    ).then(
-        flash_buttons, [], btn_list + [textbox_feedback]
-    )
+    ).then(flash_buttons, [], btn_list + [textbox_feedback])
     send_btn.click(
         add_text,
-        [state, model_selector, textbox, imagebox],
+        [state, model_selector, textbox, imagebox, sys_msg_textbox],
         [state, chatbot, textbox, imagebox] + btn_list,
     ).then(
         bot_response,
         [state, temperature, top_p, max_output_tokens],
         [state, chatbot] + btn_list,
-    ).then(
-        flash_buttons, [], btn_list + [textbox_feedback]
-    )
+    ).then(flash_buttons, [], btn_list + [textbox_feedback])
 
     return [state, model_selector]
 
