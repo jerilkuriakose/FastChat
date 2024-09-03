@@ -2474,6 +2474,8 @@ class AllamAdapterWithSys(BaseModelAdapter):
             "allam-13b-v2-25",
             "allam_13b_v2_26",
             "allam-13b-v2-26",
+            "allam_7b_alpha_v1_27",
+            "allam-7b-alpha-v1-27",
         ]
         return any(substring in model_path.lower() for substring in model_names)
 
