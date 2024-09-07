@@ -2323,6 +2323,21 @@ register_conv_template(
     )
 )
 
+register_conv_template(
+    Conversation(
+        name="reflection-llama-3",
+        system_template="<|start_header_id|>system<|end_header_id|>\n\n{system_message}<|eot_id|>",
+        system_message=(
+            "You are a world-class AI system, capable of complex reasoning and reflection. Reason through the query inside <thinking> tags, and then provide your final response inside <output> tags. If you detect that you made a mistake in your reasoning at any point, correct yourself inside <reflection> tags."
+        ),
+        roles=("user", "assistant"),
+        sep_style=SeparatorStyle.LLAMA3,
+        sep="",
+        stop_str="<|eot_id|>",
+        stop_token_ids=[128001, 128009],
+    )
+)
+
 if __name__ == "__main__":
     from fastchat.conversation import get_conv_template
 
