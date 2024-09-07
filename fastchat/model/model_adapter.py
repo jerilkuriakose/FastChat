@@ -2614,6 +2614,16 @@ class SilmaAdapter(BaseModelAdapter):
         return get_conv_template("gemma")
 
 
+class ReflectionLlamaAdapter(BaseModelAdapter):
+    """Model adapter for AceGPT model English for MT-Bench"""
+
+    def match(self, model_path: str):
+        return "reflection-llama-3" in model_path.lower()
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("reflection-llama-3")
+
+
 # Note: the registration order matters.
 # The one registered earlier has a higher matching priority.
 register_model_adapter(PeftModelAdapter)
@@ -2664,6 +2674,7 @@ register_model_adapter(XGenAdapter)
 register_model_adapter(PythiaAdapter)
 register_model_adapter(InternLMChatAdapter)
 register_model_adapter(StarChatAdapter)
+register_model_adapter(ReflectionLlamaAdapter)
 register_model_adapter(Llama2Adapter)
 register_model_adapter(Llama3Adapter)
 register_model_adapter(CuteGPTAdapter)
