@@ -240,6 +240,7 @@ def bothbad_vote_last_response(
 def regenerate(state0, state1, request: gr.Request):
     logger.info(f"regenerate (anony). ip: {get_ip(request)}")
     states = [state0, state1]
+
     if state0.regen_support and state1.regen_support:
         for i in range(num_sides):
             states[i].conv.update_last_message(None)
@@ -508,9 +509,7 @@ def build_side_by_side_vision_ui_anony(models, random_questions=None):
         bot_response_multi,
         states + [temperature, top_p, max_output_tokens],
         states + chatbots + btn_list,
-    ).then(
-        flash_buttons, [], btn_list
-    )
+    ).then(flash_buttons, [], btn_list)
     clear_btn.click(
         clear_history,
         None,
