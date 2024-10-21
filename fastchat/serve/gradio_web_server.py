@@ -218,7 +218,7 @@ def load_demo(url_params, request: gr.Request):
 
 
 def vote_last_response(
-    state, vote_type, model_selector, request: gr.Request, feedback=""
+    state, vote_type, model_selector, request: gr.Request, feedback="", username=""
 ):
     filename = get_conv_log_filename()
     if "llava" in model_selector:
@@ -232,34 +232,56 @@ def vote_last_response(
             "state": state.dict(),
             "ip": get_ip(request),
             "feedback": feedback,
+            "username": username,
         }
         fout.write(json.dumps(data) + "\n")
     get_remote_logger().log(data)
 
 
-def upvote_last_response(state, model_selector, tb_feedback, request: gr.Request):
+def upvote_last_response(
+    state, model_selector, tb_feedback, tb_username, request: gr.Request
+):
     ip = get_ip(request)
-    logger.info(f"upvote. ip: {ip}")
+    logger.info(f"upvote. ip: {ip} | username: {tb_username}")
     vote_last_response(
-        state, "upvote", model_selector, request, feedback=tb_feedback.strip()
+        state,
+        "upvote",
+        model_selector,
+        request,
+        feedback=tb_feedback.strip(),
+        username=tb_username,
     )
     return ("",) + (disable_btn,) * 3 + ("", invisible_btn)
 
 
-def downvote_last_response(state, model_selector, tb_feedback, request: gr.Request):
+def downvote_last_response(
+    state, model_selector, tb_feedback, tb_username, request: gr.Request
+):
     ip = get_ip(request)
-    logger.info(f"downvote. ip: {ip}")
+    logger.info(f"downvote. ip: {ip} | username: {tb_username}")
     vote_last_response(
-        state, "downvote", model_selector, request, feedback=tb_feedback.strip()
+        state,
+        "downvote",
+        model_selector,
+        request,
+        feedback=tb_feedback.strip(),
+        username=tb_username,
     )
     return ("",) + (disable_btn,) * 3 + ("", invisible_btn)
 
 
-def flag_last_response(state, model_selector, tb_feedback, request: gr.Request):
+def flag_last_response(
+    state, model_selector, tb_feedback, tb_username, request: gr.Request
+):
     ip = get_ip(request)
-    logger.info(f"flag. ip: {ip}")
+    logger.info(f"flag. ip: {ip} | username: {tb_username}")
     vote_last_response(
-        state, "flag", model_selector, request, feedback=tb_feedback.strip()
+        state,
+        "flag",
+        model_selector,
+        request,
+        feedback=tb_feedback.strip(),
+        username=tb_username,
     )
     return ("",) + (disable_btn,) * 3 + ("", invisible_btn)
 
@@ -793,6 +815,16 @@ def build_single_model_ui(models, add_promotion_links=False):
     state = gr.State()
     gr.Markdown(notice_markdown, elem_id="notice_markdown")
 
+    with gr.Row():
+        with gr.Column(scale=0.25):
+            gr.Markdown("# Enter your Name:", elem_id="name_label")
+        with gr.Column(scale=3.75):
+            textbox_username = gr.Textbox(
+                show_label=False,
+                placeholder="Type your name here",
+                elem_id="input_box_username",
+            )
+
     with gr.Group(elem_id="share-region-named"):
         with gr.Row(elem_id="model_selector_row"):
             model_selector = gr.Dropdown(
@@ -879,7 +911,7 @@ def build_single_model_ui(models, add_promotion_links=False):
     btn_list = [upvote_btn, downvote_btn, flag_btn, regenerate_btn, clear_btn]
     upvote_btn.click(
         upvote_last_response,
-        [state, model_selector] + [textbox_feedback],
+        [state, model_selector] + [textbox_feedback, textbox_username],
         [
             textbox,
             upvote_btn,
@@ -891,7 +923,7 @@ def build_single_model_ui(models, add_promotion_links=False):
     )
     downvote_btn.click(
         downvote_last_response,
-        [state, model_selector] + [textbox_feedback],
+        [state, model_selector] + [textbox_feedback, textbox_username],
         [
             textbox,
             upvote_btn,
@@ -903,7 +935,7 @@ def build_single_model_ui(models, add_promotion_links=False):
     )
     flag_btn.click(
         flag_last_response,
-        [state, model_selector] + [textbox_feedback],
+        [state, model_selector] + [textbox_feedback, textbox_username],
         [
             textbox,
             upvote_btn,
