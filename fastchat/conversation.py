@@ -2325,6 +2325,20 @@ register_conv_template(
 
 register_conv_template(
     Conversation(
+        name="deepseek_r1",
+        system_template="{system_message}",
+        roles=("<｜User｜>", "<｜Assistant｜>"),
+        sep_style=SeparatorStyle.NO_COLON_SINGLE,
+        sep="",
+        sep2="<｜end▁of▁sentence｜>",
+        stop_str="<｜end▁of▁sentence｜>",
+        # Adding support for tool calls and outputs
+        system_message="",  # You can set a default system message here if needed
+    )
+)
+
+register_conv_template(
+    Conversation(
         name="reflection-llama-3",
         system_template="<|start_header_id|>system<|end_header_id|>\n\n{system_message}<|eot_id|>",
         system_message=(

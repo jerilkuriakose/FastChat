@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import random
+import re
 import time
 import uuid
 
@@ -410,6 +411,7 @@ def model_worker_stream_iter(
         "stop": conv.stop_str,
         "stop_token_ids": conv.stop_token_ids,
         "echo": False,
+        # "skip_special_tokens": True
     }
 
     logger.info(f"==== request ====\n{gen_params}")
@@ -428,6 +430,15 @@ def model_worker_stream_iter(
     for chunk in response.iter_lines(decode_unicode=False, delimiter=b"\0"):
         if chunk:
             data = json.loads(chunk.decode())
+            
+            if 'text' in data:
+                text = data['text']
+                
+                if '<think>' in text:
+                    text = re.sub(r'<think>(.*?)</think>', r'💭 **Thinking Process:**\n\1\n\n🎯 **Thinking complete!**\n\n', text, flags=re.DOTALL)
+                
+                data['text'] = text
+                
             yield data
 
 

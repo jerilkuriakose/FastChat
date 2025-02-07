@@ -2626,6 +2626,17 @@ class ReflectionLlamaAdapter(BaseModelAdapter):
         return get_conv_template("reflection-llama-3")
 
 
+class DeepseekR1Adaptor(BaseModelAdapter):
+    """Model adapter for AceGPT model English for MT-Bench"""
+
+    def match(self, model_path: str):
+        model_names = ["deepseek-r1-distill-llama-70b"]
+        return any(substring in model_path.lower() for substring in model_names)
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("deepseek_r1")
+
+
 # Note: the registration order matters.
 # The one registered earlier has a higher matching priority.
 register_model_adapter(PeftModelAdapter)
@@ -2742,6 +2753,7 @@ register_model_adapter(JaisOriginalAr)
 register_model_adapter(AceGPTOriginalEng)
 register_model_adapter(AceGPTOriginalAr)
 register_model_adapter(SilmaAdapter)
+register_model_adapter(DeepseekR1Adaptor)
 
 # After all adapters, try the default base adapter.
 register_model_adapter(BaseModelAdapter)
