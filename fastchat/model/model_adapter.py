@@ -297,9 +297,9 @@ def load_model(
                 print(model)
             return model, tokenizer
     elif awq_config and awq_config.wbits < 16:
-        assert (
-            awq_config.wbits == 4
-        ), "Currently we only support 4-bit inference for AWQ."
+        assert awq_config.wbits == 4, (
+            "Currently we only support 4-bit inference for AWQ."
+        )
         model, tokenizer = load_awq_quantized(model_path, awq_config, device)
         if num_gpus != 1:
             device_map = accelerate.infer_auto_device_map(
@@ -689,7 +689,7 @@ class PeftModelAdapter:
 
 
 class VicunaAdapter(BaseModelAdapter):
-    "Model adapter for Vicuna models (e.g., lmsys/vicuna-7b-v1.5)" ""
+    "Model adapter for Vicuna models (e.g., lmsys/vicuna-7b-v1.5)"
 
     use_fast_tokenizer = False
 
@@ -2478,11 +2478,27 @@ class AllamAdapterWithSys(BaseModelAdapter):
             "allam-7b-alpha-v1-27",
             "allam_34b_v2_19",
             "allam-34b-v2-19",
+            "allam-34b-alpha-v3.33",
+            "allam-34b-alpha-v3-33",
+            "allam_34b_alpha_v3_33",
         ]
         return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("allam_zero_shot_in_house_with_sys_v2_26")
+
+
+class AllamAdapter34bSys(BaseModelAdapter):
+    """Model adapter for ALLaM model for ALLAM benchmark"""
+
+    def match(self, model_path: str):
+        model_names = [
+            "allam-34b-sys",
+        ]
+        return any(substring in model_path.lower() for substring in model_names)
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("allam_34b_sys")
 
 
 class AllamAdapterPromptPatchV1_12(BaseModelAdapter):
@@ -2748,6 +2764,7 @@ register_model_adapter(AllamAdapterPromptPatchV1_12)
 register_model_adapter(AllamAdapterPatchV1_12)
 register_model_adapter(AllamAdapterV1_12)
 register_model_adapter(AllamAdapter)
+register_model_adapter(AllamAdapter34bSys)
 register_model_adapter(JaisOriginalEng)
 register_model_adapter(JaisOriginalAr)
 register_model_adapter(AceGPTOriginalEng)

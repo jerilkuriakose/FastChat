@@ -179,7 +179,7 @@ class Conversation:
 
             for i, (role, message) in enumerate(self.messages):
                 if i % 2 == 0:
-                    ret += f"[Round {i//2 + round_add_n}]{self.sep}"
+                    ret += f"[Round {i // 2 + round_add_n}]{self.sep}"
 
                 if message:
                     ret += f"{role}：{message}{self.sep}"
@@ -699,9 +699,9 @@ conv_templates: Dict[str, Conversation] = {}
 def register_conv_template(template: Conversation, override: bool = False):
     """Register a new conversation template."""
     if not override:
-        assert (
-            template.name not in conv_templates
-        ), f"{template.name} has been registered."
+        assert template.name not in conv_templates, (
+            f"{template.name} has been registered."
+        )
 
     conv_templates[template.name] = template
 
@@ -2246,6 +2246,19 @@ register_conv_template(
         name="allam_zero_shot_in_house_with_sys_v2_26",
         system_template="<s> [INST] <<SYS>>\n{system_message}\n<</SYS>>\n\n",
         system_message="",
+        roles=(" [INST]", "[/INST]"),
+        sep_style=SeparatorStyle.LLAMA2,
+        sep=" ",
+        sep2=" </s><s>",
+        stop_str=["</s>"],
+    )
+)
+
+register_conv_template(
+    Conversation(
+        name="allam_34b_sys",
+        system_template="<s> [INST] <<SYS>>\n{system_message}\n<</SYS>>\n\n",
+        system_message="Your role as an assistant involves thoroughly exploring questions through a systematic long thinking process before providing the final precise and accurate solutions. This requires engaging in a comprehensive cycle of analysis, summarizing, exploration, reassessment, reflection, backtracing, and iteration to develop well-considered thinking process. Please structure your response into two main sections: Thought and Solution. In the Thought section, detail your reasoning process using the specified format: <|begin_of_thought|> {thought with steps separated with '\\n\\n'} <|end_of_thought|> Each step should include detailed considerations such as analisying questions, summarizing relevant findings, brainstorming new ideas, verifying the accuracy of the current steps, refining any errors, and revisiting previous steps. In the Solution section, based on various attempts, explorations, and reflections from the Thought section, systematically present the final solution that you deem correct. The solution should remain a logical, accurate, concise expression style and detail necessary step needed to reach the conclusion, formatted as follows: <|begin_of_solution|> {final formatted, precise, and clear solution} <|end_of_solution|> Now, try to solve the following question through the above guidelines:",
         roles=(" [INST]", "[/INST]"),
         sep_style=SeparatorStyle.LLAMA2,
         sep=" ",
