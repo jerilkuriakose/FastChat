@@ -53,17 +53,29 @@ peft_share_base_weights = (
 )
 
 ANTHROPIC_MODEL_LIST = (
+    # Claude 1 models
     "claude-1",
+    "claude-instant-1",
+    "claude-instant-1.2",
+    
+    # Claude 2 models
     "claude-2",
     "claude-2.0",
     "claude-2.1",
+    
+    # Claude 3 models
     "claude-3-haiku-20240307",
     "claude-3-haiku-20240307-vertex",
     "claude-3-sonnet-20240229",
     "claude-3-sonnet-20240229-vertex",
     "claude-3-opus-20240229",
-    "claude-instant-1",
-    "claude-instant-1.2",
+    
+    # Claude 3.5 models
+    "claude-3-5-sonnet-20240620",
+    "claude-3-5-haiku-20240307",
+    
+    # Claude 3.7 models
+    "claude-3-7-sonnet-20250219",
 )
 
 OPENAI_MODEL_LIST = (
