@@ -55,6 +55,24 @@ register_model_info(
 )
 
 register_model_info(
+    [
+        "claude-3-5-sonnet-20240620",
+    ],
+    "Claude 3.5",
+    "https://www.anthropic.com/news/claude-3-5-sonnet",
+    "Claude by Anthropic",
+)
+
+register_model_info(
+    [
+        "claude-3-7-sonnet-20250219",
+    ],
+    "Claude 3.7",
+    "https://www.anthropic.com/news/claude-3-7-sonnet",
+    "Claude by Anthropic",
+)
+
+register_model_info(
     ["reka-flash", "reka-flash-online"],
     "Reka Flash",
     "https://www.reka.ai/news/reka-flash-efficient-and-capable-multimodal-language-models",
