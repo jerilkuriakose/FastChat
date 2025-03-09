@@ -487,36 +487,66 @@ def openai_assistant_api_stream_iter(
 
 def anthropic_api_stream_iter(model_name, prompt, temperature, top_p, max_new_tokens):
     import anthropic
-
     c = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-
+    
+    # Check if it's a Claude 3 or newer model
+    is_newer_model = "claude-3" in model_name
+    
     # Make requests
     gen_params = {
         "model": model_name,
-        "prompt": prompt,
         "temperature": temperature,
         "top_p": top_p,
-        "max_new_tokens": max_new_tokens,
+        "max_tokens": max_new_tokens if is_newer_model else None,
+        "max_tokens_to_sample": None if is_newer_model else max_new_tokens,
+        "prompt": None if is_newer_model else prompt,
+        "messages": [{"role": "user", "content": prompt}] if is_newer_model else None,
     }
-    logger.info(f"==== request ====\n{gen_params}")
-
-    res = c.completions.create(
-        prompt=prompt,
-        stop_sequences=[anthropic.HUMAN_PROMPT],
-        max_tokens_to_sample=max_new_tokens,
-        temperature=temperature,
-        top_p=top_p,
-        model=model_name,
-        stream=True,
-    )
+    
+    # Remove None values for logging clarity
+    log_params = {k: v for k, v in gen_params.items() if v is not None}
+    logger.info(f"==== request ====\n{log_params}")
+    
     text = ""
-    for chunk in res:
-        text += chunk.completion
-        data = {
-            "text": text,
-            "error_code": 0,
-        }
-        yield data
+    
+    if is_newer_model:
+        # Messages API for Claude 3 and newer
+        res = c.messages.create(
+            model=model_name,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=max_new_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            stream=True,
+        )
+        
+        for chunk in res:
+            if chunk.type == "content_block_delta" and chunk.delta.type == "text":
+                text += chunk.delta.text
+                data = {
+                    "text": text,
+                    "error_code": 0,
+                }
+                yield data
+    else:
+        # Completions API for older Claude models
+        res = c.completions.create(
+            prompt=prompt,
+            stop_sequences=[anthropic.HUMAN_PROMPT],
+            max_tokens_to_sample=max_new_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            model=model_name,
+            stream=True,
+        )
+        
+        for chunk in res:
+            text += chunk.completion
+            data = {
+                "text": text,
+                "error_code": 0,
+            }
+            yield data
 
 
 def anthropic_message_api_stream_iter(
