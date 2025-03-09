@@ -498,24 +498,49 @@ def chat_completion_anthropic(model, conv, temperature, max_tokens, api_dict=Non
         api_key = api_dict["api_key"]
     else:
         api_key = os.environ["ANTHROPIC_API_KEY"]
-
     output = API_ERROR_OUTPUT
     for _ in range(API_MAX_RETRY):
         try:
             c = anthropic.Anthropic(api_key=api_key)
-            prompt = conv.get_prompt()
-            response = c.completions.create(
-                model=model,
-                prompt=prompt,
-                stop_sequences=[anthropic.HUMAN_PROMPT],
-                max_tokens_to_sample=max_tokens,
-                temperature=temperature,
-            )
-            output = response.completion
+            
+            # Check if the model is a newer Claude model (claude-3 or higher)
+            is_newer_model = "claude-3" in model
+            
+            if is_newer_model:
+                # For newer models, use the Messages API
+                messages = []
+                # Convert from your conversation format to Messages API format
+                # Assuming your conv object has a method to get the conversation history
+                conversation_history = conv.get_conversation_history()
+                for role, content in conversation_history:
+                    if role == "human":
+                        messages.append({"role": "user", "content": content})
+                    elif role == "assistant":
+                        messages.append({"role": "assistant", "content": content})
+                
+                response = c.messages.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                )
+                output = response.content[0].text
+            else:
+                # For older models, use the Completions API
+                prompt = conv.get_prompt()
+                response = c.completions.create(
+                    model=model,
+                    prompt=prompt,
+                    stop_sequences=[anthropic.HUMAN_PROMPT],
+                    max_tokens_to_sample=max_tokens,
+                    temperature=temperature,
+                )
+                output = response.completion
             break
         except anthropic.APIError as e:
             print(type(e), e)
             time.sleep(API_RETRY_SLEEP)
+            
     return output.strip()
 
 
