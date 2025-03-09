@@ -107,18 +107,18 @@ register_model_info(
 
 register_model_info(
     [
-        "qwen1.5-72b-chat",
-        "qwen1.5-32b-chat",
-        "qwen1.5-14b-chat",
-        "qwen1.5-7b-chat",
-        "qwen1.5-4b-chat",
-        "qwen1.5-1.8b-chat",
-        "qwen1.5-0.5b-chat",
-        "qwen-14b-chat",
+        "qwen2.5-72b-instruct",
+        "qwen2-72b-instruct",
+        "qwen-max-0403",
+        "qwen-max-0428",
+        "qwen-max-0919",
+        "qwen-plus-0828",
+        "qwen2-vl-7b-instruct",
+        "qwen-vl-max-0809",
     ],
-    "Qwen 1.5",
-    "https://qwenlm.github.io/blog/qwen1.5/",
-    "A large language model by Alibaba Cloud",
+    "Qwen Max",
+    "https://help.aliyun.com/zh/dashscope/developer-reference/model-introduction",
+    "The Frontier Qwen Model by Alibaba",
 )
 
 
