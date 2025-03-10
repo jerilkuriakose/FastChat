@@ -66,7 +66,7 @@ def get_api_provider_stream_iter(
         else:
             prompt = conv.to_openai_api_messages()
         stream_iter = anthropic_api_stream_iter(
-            model_name, prompt, temperature, top_p, max_new_tokens
+            model_name, prompt, temperature, top_p, max_new_tokens, model_api_dict
         )
     elif model_api_dict["api_type"] == "anthropic_message":
         if model_api_dict["vision-arena"]:
@@ -485,61 +485,111 @@ def openai_assistant_api_stream_iter(
             yield {"text": full_ret_text, "error_code": 0}
 
 
-def anthropic_api_stream_iter(model_name, prompt, temperature, top_p, max_new_tokens):
+def anthropic_api_stream_iter(
+    model_name, prompt, temperature, top_p, max_new_tokens, model_api_dict
+):
     import anthropic
-    c = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    
+
+    c = anthropic.Anthropic(api_key=model_api_dict["api_key"])
+
     # Check if it's a Claude 3 or newer model
-    is_newer_model = "claude-3" in model_name
-    
-    # Make requests
-    gen_params = {
-        "model": model_name,
-        "temperature": temperature,
-        "top_p": top_p,
-        "max_tokens": max_new_tokens if is_newer_model else None,
-        "max_tokens_to_sample": None if is_newer_model else max_new_tokens,
-        "prompt": None if is_newer_model else prompt,
-        "messages": [{"role": "user", "content": prompt}] if is_newer_model else None,
-    }
-    
-    # Remove None values for logging clarity
-    log_params = {k: v for k, v in gen_params.items() if v is not None}
-    logger.info(f"==== request ====\n{log_params}")
-    
+    is_newer_model = "claude-3" in model_api_dict["model_name"]
+
     text = ""
-    
+
     if is_newer_model:
         # Messages API for Claude 3 and newer
-        res = c.messages.create(
-            model=model_name,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=max_new_tokens,
-            temperature=temperature,
-            top_p=top_p,
-            stream=True,
-        )
-        
-        for chunk in res:
-            if chunk.type == "content_block_delta" and chunk.delta.type == "text":
-                text += chunk.delta.text
-                data = {
-                    "text": text,
-                    "error_code": 0,
-                }
-                yield data
+
+        # Extract system message if present
+        system_message = None
+        messages = []
+
+        for message in prompt:
+            if message["role"] == "system":
+                system_message = message["content"]
+            else:
+                # All other messages are added to the messages list
+                messages.append(message)
+
+        # Log request parameters
+        log_params = {
+            "model": model_api_dict["model_name"],
+            "messages": messages,
+            "system": system_message,
+            "max_tokens": max_new_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+            "stream": True,
+        }
+        logger.info(f"==== request ====\n{log_params}")
+
+        # Create messages request with system parameter if provided
+        request_params = {
+            "model": model_api_dict["model_name"],
+            "messages": messages,
+            "max_tokens": max_new_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+        }
+
+        # Add system parameter only if a system message was found
+        if system_message is not None:
+            request_params["system"] = system_message
+
+        # Using the new streaming approach
+        with c.messages.stream(**request_params) as stream:
+            for chunk in stream:
+                if (
+                    chunk.type == "content_block_delta"
+                    and chunk.delta.type == "text_delta"
+                ):
+                    text += chunk.delta.text
+                    data = {
+                        "text": text,
+                        "error_code": 0,
+                    }
+                    yield data
     else:
         # Completions API for older Claude models
+        # For Completions API, we need to convert the messages format to the older Claude prompt format
+
+        # Convert messages to Claude's prompt format
+        formatted_prompt = ""
+        for message in prompt:
+            if message["role"] == "system":
+                # System message becomes part of the initial context for Claude
+                formatted_prompt += f"{anthropic.AI_PROMPT} {message['content']}\n\n{anthropic.HUMAN_PROMPT} "
+            elif message["role"] == "user":
+                # User messages are prefixed with the human prompt
+                formatted_prompt += f"{message['content']}"
+            elif message["role"] == "assistant":
+                # Assistant messages are prefixed with the assistant prompt
+                formatted_prompt += f"{anthropic.AI_PROMPT} {message['content']}"
+
+        # Add final AI prompt to complete the format
+        formatted_prompt += anthropic.AI_PROMPT
+
+        # Log request parameters
+        log_params = {
+            "model": model_api_dict["model_name"],
+            "prompt": formatted_prompt,
+            "max_tokens_to_sample": max_new_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+            "stream": True,
+        }
+        logger.info(f"==== request ====\n{log_params}")
+
         res = c.completions.create(
-            prompt=prompt,
+            prompt=formatted_prompt,
             stop_sequences=[anthropic.HUMAN_PROMPT],
             max_tokens_to_sample=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
-            model=model_name,
+            model=model_api_dict["model_name"],
             stream=True,
         )
-        
+
         for chunk in res:
             text += chunk.completion
             data = {
@@ -559,6 +609,7 @@ def anthropic_message_api_stream_iter(
 ):
     import anthropic
 
+    print("2" * 50)
     if vertex_ai:
         client = anthropic.AnthropicVertex(
             region=os.environ["GCP_LOCATION"],
