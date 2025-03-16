@@ -2506,6 +2506,8 @@ class AllamAdapter34bSys(BaseModelAdapter):
     def match(self, model_path: str):
         model_names = [
             "allam-34b-sys",
+            "allam-34b-v3-33-0-think",
+            "allam-34b-alpha-v3-33-0-32k-l1-29-think"
         ]
         return any(substring in model_path.lower() for substring in model_names)
 
