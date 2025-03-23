@@ -57,23 +57,19 @@ ANTHROPIC_MODEL_LIST = (
     "claude-1",
     "claude-instant-1",
     "claude-instant-1.2",
-    
     # Claude 2 models
     "claude-2",
     "claude-2.0",
     "claude-2.1",
-    
     # Claude 3 models
     "claude-3-haiku-20240307",
     "claude-3-haiku-20240307-vertex",
     "claude-3-sonnet-20240229",
     "claude-3-sonnet-20240229-vertex",
     "claude-3-opus-20240229",
-    
     # Claude 3.5 models
     "claude-3-5-sonnet-20240620",
     "claude-3-5-haiku-20240307",
-    
     # Claude 3.7 models
     "claude-3-7-sonnet-20250219",
 )
@@ -2493,6 +2489,8 @@ class AllamAdapterWithSys(BaseModelAdapter):
             "allam-34b-alpha-v3.33",
             "allam-34b-alpha-v3-33",
             "allam_34b_alpha_v3_33",
+            "allam-34b-alpha-v3",
+            "allam_34b_alpha_v3",
         ]
         return any(substring in model_path.lower() for substring in model_names)
 
@@ -2507,7 +2505,7 @@ class AllamAdapter34bSys(BaseModelAdapter):
         model_names = [
             "allam-34b-sys",
             "allam-34b-v3-33-0-think",
-            "allam-34b-alpha-v3-33-0-32k-l1-29-think"
+            "allam-34b-alpha-v3-33-0-32k-l1-29-think",
         ]
         return any(substring in model_path.lower() for substring in model_names)
 
