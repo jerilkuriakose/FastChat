@@ -418,7 +418,6 @@ def model_worker_stream_iter(
 
     if len(images) > 0:
         gen_params["images"] = images
-
     # Stream output
     response = requests.post(
         worker_addr + "/worker_generate_stream",
@@ -912,9 +911,9 @@ def build_single_model_ui(models, add_promotion_links=False):
         )
         max_output_tokens = gr.Slider(
             minimum=16,
-            maximum=2048,
-            value=1024,
-            step=64,
+            maximum=4096,
+            value=2048,
+            step=128,
             interactive=True,
             label="Max output tokens",
         )

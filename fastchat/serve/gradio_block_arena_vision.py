@@ -308,10 +308,10 @@ Note: You can only chat with <span style='color: #DE3163; font-weight: bold'>one
             label="Top P",
         )
         max_output_tokens = gr.Slider(
-            minimum=0,
-            maximum=2048,
-            value=1024,
-            step=64,
+            minimum=16,
+            maximum=4096,
+            value=2048,
+            step=128,
             interactive=True,
             label="Max output tokens",
         )
