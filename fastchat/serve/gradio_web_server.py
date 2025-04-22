@@ -436,7 +436,7 @@ def model_worker_stream_iter(
                 if "<think>" in text:
                     text = re.sub(
                         r"<think>(.*?)</think>",
-                        r"💭 **Thinking Process:**\n\1\n\n🎯 **Thinking complete!**\n\n",
+                        r"<div style='margin:5px 0'><hr style='margin:5px 0'></div>\n💭 **Thinking Process:**\n<div style='margin:5px 0'><hr style='margin:5px 0'></div>\n\1<div style='margin:5px 0'><hr style='margin:5px 0'></div>\n🎯 **Thinking complete!**\n<div style='margin:5px 0'><hr style='margin:5px 0'></div>",
                         text,
                         flags=re.DOTALL,
                     )
