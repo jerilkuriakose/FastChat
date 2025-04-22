@@ -430,15 +430,20 @@ def model_worker_stream_iter(
     for chunk in response.iter_lines(decode_unicode=False, delimiter=b"\0"):
         if chunk:
             data = json.loads(chunk.decode())
-            
-            if 'text' in data:
-                text = data['text']
-                
-                if '<think>' in text:
-                    text = re.sub(r'<think>(.*?)</think>', r'💭 **Thinking Process:**\n\1\n\n🎯 **Thinking complete!**\n\n', text, flags=re.DOTALL)
-                
-                data['text'] = text
-                
+
+            if "text" in data:
+                text = data["text"]
+
+                if "<think>" in text:
+                    text = re.sub(
+                        r"<think>(.*?)</think>",
+                        r"💭 **Thinking Process:**\n\1\n\n🎯 **Thinking complete!**\n\n",
+                        text,
+                        flags=re.DOTALL,
+                    )
+
+                data["text"] = text
+
             yield data
 
 
@@ -584,8 +589,7 @@ def bot_response(
         yield (state, state.to_gradio_chatbot()) + (enable_btn,) * 5
     except requests.exceptions.RequestException as e:
         conv.update_last_message(
-            f"{SERVER_ERROR_MSG}\n\n"
-            f"(error_code: {ErrorCode.GRADIO_REQUEST_ERROR}, {e})"
+            f"{SERVER_ERROR_MSG}\n\n(error_code: {ErrorCode.GRADIO_REQUEST_ERROR}, {e})"
         )
         yield (state, state.to_gradio_chatbot()) + (
             disable_btn,
@@ -858,6 +862,7 @@ def build_single_model_ui(models, add_promotion_links=False):
             label="Scroll down and start chatting",
             height=550,
             show_copy_button=True,
+            allow_tags=True,
         )
     with gr.Row():
         textbox = gr.Textbox(

@@ -250,7 +250,11 @@ Note: You can only chat with <span style='color: #DE3163; font-weight: bold'>one
             )
         with gr.Column(scale=8):
             chatbot = gr.Chatbot(
-                elem_id="chatbot", label="Scroll down and start chatting", height=550
+                elem_id="chatbot",
+                label="Scroll down and start chatting",
+                height=550,
+                show_copy_button=True,
+                allow_tags=True,
             )
 
     with gr.Row():

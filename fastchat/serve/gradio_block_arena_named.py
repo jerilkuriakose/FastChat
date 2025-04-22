@@ -372,9 +372,10 @@ def build_side_by_side_ui_named(models):
                 with gr.Column():
                     chatbots[i] = gr.Chatbot(
                         label=label,
-                        elem_id=f"chatbot",
+                        elem_id="chatbot",
                         height=550,
                         show_copy_button=True,
+                        allow_tags=True,
                     )
 
     with gr.Row():

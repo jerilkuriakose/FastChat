@@ -402,6 +402,7 @@ def build_side_by_side_vision_ui_anony(models, random_questions=None):
                                 elem_id="chatbot",
                                 height=550,
                                 show_copy_button=True,
+                                allow_tags=True,
                             )
 
                 with gr.Row():
@@ -508,9 +509,7 @@ def build_side_by_side_vision_ui_anony(models, random_questions=None):
         bot_response_multi,
         states + [temperature, top_p, max_output_tokens],
         states + chatbots + btn_list,
-    ).then(
-        flash_buttons, [], btn_list
-    )
+    ).then(flash_buttons, [], btn_list)
     clear_btn.click(
         clear_history,
         None,
