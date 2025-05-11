@@ -26,7 +26,11 @@ from transformers import (
 )
 
 from fastchat.constants import CPU_ISA
-from fastchat.conversation import Conversation, get_conv_template
+from fastchat.conversation import (
+    Conversation,
+    get_conv_template,
+    get_allam_thinking_conv,
+)
 from fastchat.model.compression import load_compress_model
 from fastchat.model.llama_condense_monkey_patch import replace_llama_with_condense
 from fastchat.model.model_chatglm import generate_stream_chatglm
@@ -2492,11 +2496,52 @@ class AllamAdapterWithSys(BaseModelAdapter):
             "allam-34b-alpha-v3",
             "allam_34b_alpha_v3",
             "allam-7b-instruct-preview",
+            "allam-34b-v3",
+            "allam_34b_v3",
         ]
         return any(substring in model_path.lower() for substring in model_names)
 
     def get_default_conv_template(self, model_path: str) -> Conversation:
         return get_conv_template("allam_zero_shot_in_house_with_sys_v2_26")
+
+
+class AllamThinkingAdapter(BaseModelAdapter):
+    """Model adapter for ALLaM model with thinking capability"""
+
+    def __init__(self):
+        self.model_prefixes = [
+            "allam-34b-v3",
+            "allam_34b_v3",
+        ]
+        self.model_suffix = "-think"
+
+    def match(self, model_path: str):
+        model_path_lower = model_path.lower()
+        return any(
+            model_path_lower.startswith(prefix) for prefix in self.model_prefixes
+        ) and model_path_lower.endswith(self.model_suffix)
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_allam_thinking_conv()
+
+
+class AllamGuardrailAdapter(BaseModelAdapter):
+    """Model adapter for ALLaM model with thinking capability"""
+
+    def __init__(self):
+        self.model_prefixes = [
+            "allam",
+        ]
+        self.model_suffix = "-guardrail"
+
+    def match(self, model_path: str):
+        model_path_lower = model_path.lower()
+        return any(
+            model_path_lower.startswith(prefix) for prefix in self.model_prefixes
+        ) and model_path_lower.endswith(self.model_suffix)
+
+    def get_default_conv_template(self, model_path: str) -> Conversation:
+        return get_conv_template("allam_guardrail_template")
 
 
 class AllamAdapter34bSys(BaseModelAdapter):
@@ -2505,7 +2550,7 @@ class AllamAdapter34bSys(BaseModelAdapter):
     def match(self, model_path: str):
         model_names = [
             "allam-34b-sys",
-            "allam-34b-v3-33-0-think",
+            "allam-33-0-think",
             "allam-34b-alpha-v3-33-0-32k-l1-29-think",
         ]
         return any(substring in model_path.lower() for substring in model_names)
@@ -2771,6 +2816,8 @@ register_model_adapter(SmaugChatAdapter)
 register_model_adapter(AceGPTAdapter)
 register_model_adapter(JaisAdapterV3)
 register_model_adapter(JaisAdapterV1)
+register_model_adapter(AllamGuardrailAdapter)
+register_model_adapter(AllamThinkingAdapter)
 register_model_adapter(AllamAdapter34bSys)
 register_model_adapter(AllamAdapterWithSys)
 register_model_adapter(AllamAdapterV1_12_2)

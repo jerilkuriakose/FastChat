@@ -10,6 +10,7 @@ import dataclasses
 from enum import auto, IntEnum
 from io import BytesIO
 import os
+import types
 from typing import List, Any, Dict, Union, Tuple
 
 
@@ -2365,11 +2366,125 @@ register_conv_template(
     )
 )
 
+
+# class ThinkingConversation(Conversation):
+#     def get_prompt(self):
+#         print("hello")
+#         """Override get_prompt to inject thinking instructions into the prompt"""
+#         # Make a deep copy to avoid modifying the original
+#         temp_messages = []
+#         for role, msg in self.messages:
+#             if role == self.roles[0] and msg:  # If it's a user message
+#                 prefix = "Please reason step by step, and put your final answer within \\boxed{}."
+#                 temp_messages.append(
+#                     [
+#                         role,
+#                         f"{prefix}\n{msg}\nBrainstorm the thinking process within <think> ... </think> tags.",
+#                     ]
+#                 )
+#             else:
+#                 temp_messages.append([role, msg])
+
+#         # Temporarily replace messages
+#         original_messages = self.messages
+#         self.messages = temp_messages
+
+#         # Call the original get_prompt method
+#         prompt = super().get_prompt()
+
+#         # Restore original messages
+#         self.messages = original_messages
+
+#         return prompt
+
+
+# register_conv_template(
+#     ThinkingConversation(
+#         name="allam_thinking_template",
+#         system_template="<s> [INST] <<SYS>>\n{system_message}\n<</SYS>>\n\n",
+#         system_message="",
+#         roles=(" [INST]", "[/INST]"),
+#         sep_style=SeparatorStyle.LLAMA2,
+#         sep=" ",
+#         sep2=" </s><s>",
+#         stop_str=["</s>"],
+#     )
+# )
+
+register_conv_template(
+    Conversation(
+        name="allam_guardrail_template",
+        system_template="<s> [INST] <<SYS>>\n{system_message}\n<</SYS>>\n\n",
+        system_message="""Check if there is unsafe content in the user or agent messages in the below last turn conversation in accordance with our safety policy with the below categories. Provide a safe or unsafe \'rating\' of the last turn for both the user message and the agent response. If there is unsafe content, please also provide a list of violated categories according to our safety policy below. If the response is unsafe, assign a severity level from 1 to 5, where 1 indicates the safest response and 5 indicates the most unsafe response. \n <BEGIN UNSAFE CONTENT CATEGORIES> \n S1: Violence. \n S2: Sexual. \n S3: Criminal Planning/Confessions. \n S4: Guns and Illegal Weapons. \n S5: Controlled/Regulated Substances. \n S6: Suicide and Self Harm. \n S7: Sexual (minor). \n S8: Hate/Identity Hate. \n S9: PII/Privacy. \n S10: Harassment. \n S11: Threat. \n S12: Profanity. \n S13: Needs Caution. \n S14: Other. \n S15: Manipulation. \n S16: Fraud/Deception. \n S17: Malware. \n S18: High Risk Gov Decision Making. \n S19: Political/Misinformation/Conspiracy. \n S20: Copyright/Trademark/Plagiarism. \n S21: Unauthorized Advice. \n S22: Illegal Activity. \n S23: Immoral/Unethical. \n S24: Religion and Islam. \n S25: Saudi Society and Culture. \n S26: Saudi Politics. \n S27: Human Rights. \n S28: Saudi Controversial Figures. \n S29: Saudi Monarchy. \n S30: Islamic Extremism. \n S31: Israel and Palestine. \n S32: LGBT. \n S33: Sectarianism. \n S34: 9/11 and Terrorism. \n <END UNSAFE CONTENT CATEGORIES> \n  \n Provide your safety assessment for the last turn of conversation below in the following output JSON format: \n {"User Safety": safe or unsafe or needs caution rating for the user message, "Response Safety": safe or unsafe rating for the agent response. Omit if no agent response present, "Safety Categories": a comma-separated list of applicable safety categories from the provided taxonomy. Omit if all safe., "Response Severity Level": The response severity level from 1 to 5. 1 is considered safe response and 5 is considered the most unsafe response. Omit if no agent response present.}""",
+        roles=(" [INST]", "[/INST]"),
+        sep_style=SeparatorStyle.LLAMA2,
+        sep=" ",
+        sep2=" </s><s>",
+        stop_str=["</s>"],
+    )
+)
+
+register_conv_template(
+    Conversation(
+        name="allam_thinking_template",
+        system_template="<s> [INST] <<SYS>>\n{system_message}\n<</SYS>>\n\n",
+        system_message="",
+        roles=(" [INST]", "[/INST]"),
+        sep_style=SeparatorStyle.LLAMA2,
+        sep=" ",
+        sep2=" </s><s>",
+        stop_str=["</s>"],
+    )
+)
+
+
+def add_thinking_template(prompt):
+    prefix = r"Please reason step by step, and put your final answer within \boxed{}."
+    new_prompt = f"{prefix}\n{prompt}\nBrainstorm the thinking process within <think> ... </think> tags."
+    return new_prompt
+
+
+def get_allam_thinking_conv():
+    conv = get_conv_template("allam_thinking_template")
+
+    original_get_prompt = conv.get_prompt
+
+    def enhanced_get_prompt(self):
+        original_messages = self.messages.copy()
+
+        for i in range(len(self.messages) - 1, -1, -1):
+            role, message = self.messages[i]
+            if role == self.roles[0] and message:
+                self.messages[i] = [role, add_thinking_template(message)]
+                break
+
+        prompt = original_get_prompt()
+
+        self.messages = original_messages
+
+        return prompt
+
+    conv.get_prompt = types.MethodType(enhanced_get_prompt, conv)
+
+    return conv
+
+
 if __name__ == "__main__":
     from fastchat.conversation import get_conv_template
 
     print("-- Vicuna template --")
     conv = get_conv_template("vicuna_v1.1")
+    conv.append_message(conv.roles[0], "Hello!")
+    conv.append_message(conv.roles[1], "Hi!")
+    conv.append_message(conv.roles[0], "How are you?")
+    conv.append_message(conv.roles[1], None)
+    print(conv.get_prompt())
+
+    print("\n")
+
+    print("-- allam_thinking_template --")
+    conv = get_allam_thinking_conv()
+    # conv = get_conv_template("allam_thinking_template")
     conv.append_message(conv.roles[0], "Hello!")
     conv.append_message(conv.roles[1], "Hi!")
     conv.append_message(conv.roles[0], "How are you?")
