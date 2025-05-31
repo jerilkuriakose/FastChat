@@ -998,64 +998,71 @@ def cohere_api_stream_iter(
     client_name: str,
     model_id: str,
     messages: list,
-    temperature: Optional[
-        float
-    ] = None,  # The SDK or API handles None for all parameters following
+    temperature: Optional[float] = None,
     top_p: Optional[float] = None,
     max_new_tokens: Optional[int] = None,
     api_key: Optional[str] = None,  # default is env var CO_API_KEY
     api_base: Optional[str] = None,
 ):
+    """
+    Updated Cohere streaming function using ClientV2
+    """
     import cohere
 
-    OPENAI_TO_COHERE_ROLE_MAP = {
-        "user": "User",
-        "assistant": "Chatbot",
-        "system": "System",
-    }
-
-    client = cohere.Client(
+    # Initialize ClientV2 with the new SDK
+    client = cohere.ClientV2(
         api_key=api_key,
         base_url=api_base,
-        client_name=client_name,
+        # Note: client_name not supported in ClientV2 constructor
+        log_warning_experimental_features=False,
     )
 
-    # prepare and log requests
-    chat_history = [
-        dict(
-            role=OPENAI_TO_COHERE_ROLE_MAP[message["role"]], message=message["content"]
-        )
-        for message in messages[:-1]
-    ]
-    actual_prompt = messages[-1]["content"]
-
+    # Prepare request parameters for logging
     gen_params = {
         "model": model_id,
         "messages": messages,
-        "chat_history": chat_history,
-        "prompt": actual_prompt,
         "temperature": temperature,
-        "top_p": top_p,
-        "max_new_tokens": max_new_tokens,
+        "p": top_p,
+        "max_tokens": max_new_tokens,
     }
     logger.info(f"==== request ====\n{gen_params}")
 
-    # make request and stream response
-    res = client.chat_stream(
-        message=actual_prompt,
-        chat_history=chat_history,
-        model=model_id,
-        temperature=temperature,
-        max_tokens=max_new_tokens,
-        p=top_p,
-    )
     try:
+        # Build stream parameters, filtering out None values
+        stream_params = {
+            "model": model_id,
+            "messages": messages,
+        }
+
+        if temperature is not None:
+            stream_params["temperature"] = temperature
+        if top_p is not None:
+            stream_params["p"] = top_p
+        if max_new_tokens is not None:
+            stream_params["max_tokens"] = max_new_tokens
+
+        # Start streaming
+        res = client.chat_stream(**stream_params)
+
         text = ""
         for streaming_item in res:
-            if streaming_item.event_type == "text-generation":
-                text += streaming_item.text
-                yield {"text": text, "error_code": 0}
-    except cohere.core.ApiError as e:
+            # Only process content-delta events which contain the actual text
+            if (
+                hasattr(streaming_item, "type")
+                and streaming_item.type == "content-delta"
+            ):
+                # Extract text from the nested structure: delta.message.content.text
+                if (
+                    hasattr(streaming_item, "delta")
+                    and hasattr(streaming_item.delta, "message")
+                    and hasattr(streaming_item.delta.message, "content")
+                    and hasattr(streaming_item.delta.message.content, "text")
+                ):
+                    delta_text = streaming_item.delta.message.content.text
+                    text += delta_text
+                    yield {"text": text, "error_code": 0}
+
+    except Exception as e:
         logger.error(f"==== error from cohere api: {e} ====")
         yield {
             "text": f"**API REQUEST ERROR** Reason: {e}",
