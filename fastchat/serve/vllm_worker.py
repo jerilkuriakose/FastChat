@@ -10,7 +10,9 @@ See documentations at docs/vllm_integration.md
 # =============================================================================
 import argparse
 import inspect
+import multiprocessing
 
+multiprocessing.set_start_method("spawn", force=True)
 # Store original methods
 _original_add_argument = argparse.ArgumentParser.add_argument
 
