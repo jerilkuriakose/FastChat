@@ -4,7 +4,89 @@ A model worker that executes the model based on vLLM.
 See documentations at docs/vllm_integration.md
 """
 
+# =============================================================================
+# IMPROVED FIX: Comprehensive monkey patch for vLLM argparse compatibility
+# This must be the very first thing before any other imports
+# =============================================================================
 import argparse
+import inspect
+
+# Store original methods
+_original_add_argument = argparse.ArgumentParser.add_argument
+
+# Get all Action classes that might need patching
+action_classes = []
+for name in dir(argparse):
+    obj = getattr(argparse, name)
+    if (
+        inspect.isclass(obj)
+        and issubclass(obj, argparse.Action)
+        and obj != argparse.Action
+    ):
+        action_classes.append(obj)
+
+# Store original __init__ methods for all Action classes
+original_inits = {}
+for action_class in action_classes:
+    if hasattr(action_class, "__init__"):
+        original_inits[action_class] = action_class.__init__
+
+
+def _patched_add_argument(self, *args, **kwargs):
+    """Remove unsupported argparse arguments that newer vLLM versions use"""
+    # Extended list of potentially unsupported arguments
+    unsupported_args = [
+        "deprecated",
+        "ge",
+        "le",
+        "lt",
+        "gt",
+        "min_length",
+        "max_length",
+        "exit_on_error",
+    ]
+    for arg in unsupported_args:
+        if arg in kwargs:
+            print(f"Warning: Removing unsupported argparse argument '{arg}'")
+            del kwargs[arg]
+    return _original_add_argument(self, *args, **kwargs)
+
+
+def create_patched_init(original_init, class_name):
+    """Create a patched __init__ method for an Action class"""
+
+    def _patched_init(self, *args, **kwargs):
+        unsupported_args = [
+            "deprecated",
+            "ge",
+            "le",
+            "lt",
+            "gt",
+            "min_length",
+            "max_length",
+            "exit_on_error",
+        ]
+        for arg in unsupported_args:
+            if arg in kwargs:
+                print(f"Warning: Removing unsupported {class_name} argument '{arg}'")
+                del kwargs[arg]
+        return original_init(self, *args, **kwargs)
+
+    return _patched_init
+
+
+# Apply patches
+argparse.ArgumentParser.add_argument = _patched_add_argument
+
+# Patch all Action subclass __init__ methods
+for action_class in action_classes:
+    if action_class in original_inits:
+        action_class.__init__ = create_patched_init(
+            original_inits[action_class], action_class.__name__
+        )
+
+print("Applied comprehensive argparse compatibility patches for vLLM")
+# =============================================================================
 import asyncio
 import json
 from typing import List
@@ -23,7 +105,6 @@ from fastchat.serve.model_worker import (
     worker_id,
 )
 from fastchat.utils import get_context_length, is_partial_stop
-
 
 app = FastAPI()
 
@@ -54,15 +135,120 @@ class VLLMWorker(BaseModelWorker):
         logger.info(
             f"Loading the model {self.model_names} on worker {worker_id}, worker type: vLLM worker..."
         )
-        self.tokenizer = llm_engine.engine.tokenizer
-        # This is to support vllm >= 0.2.7 where TokenizerGroup was introduced
-        # and llm_engine.engine.tokenizer was no longer a raw tokenizer
-        if hasattr(self.tokenizer, "tokenizer"):
-            self.tokenizer = llm_engine.engine.tokenizer.tokenizer
-        self.context_len = get_context_length(llm_engine.engine.model_config.hf_config)
+
+        # Store the engine for later async access
+        self.llm_engine = llm_engine
+        self.tokenizer = None
+        self.context_len = None
+        self._initialization_complete = False
+        self._initialization_started = False
 
         if not no_register:
             self.init_heart_beat()
+
+    async def _initialize_async(self):
+        """Initialize tokenizer and context length asynchronously"""
+        try:
+            # Try the new async API methods first
+            if hasattr(self.llm_engine, "get_tokenizer"):
+                self.tokenizer = await self.llm_engine.get_tokenizer()
+                logger.info("Successfully obtained tokenizer using async API")
+
+            if hasattr(self.llm_engine, "get_model_config"):
+                model_config = await self.llm_engine.get_model_config()
+                self.context_len = get_context_length(model_config.hf_config)
+                logger.info(
+                    f"Successfully obtained model config, context length: {self.context_len}"
+                )
+
+            # Fallback methods for different vLLM versions
+            if self.tokenizer is None or self.context_len is None:
+                await self._fallback_initialization()
+
+            logger.info("VLLMWorker initialization completed successfully")
+
+        except Exception as e:
+            logger.error(f"Failed to initialize VLLMWorker: {e}")
+            await self._fallback_initialization()
+        finally:
+            self._initialization_complete = True
+
+    async def _fallback_initialization(self):
+        """Fallback initialization methods for older vLLM versions"""
+        try:
+            # Try accessing engine directly (older vLLM versions)
+            if hasattr(self.llm_engine, "engine"):
+                if self.tokenizer is None:
+                    tokenizer = self.llm_engine.engine.tokenizer
+                    # Handle TokenizerGroup wrapper (vLLM >= 0.2.7)
+                    if hasattr(tokenizer, "tokenizer"):
+                        self.tokenizer = tokenizer.tokenizer
+                    else:
+                        self.tokenizer = tokenizer
+                    logger.info("Fallback: obtained tokenizer from engine.tokenizer")
+
+                if self.context_len is None:
+                    model_config = self.llm_engine.engine.model_config
+                    self.context_len = get_context_length(model_config.hf_config)
+                    logger.info(
+                        f"Fallback: obtained context length from engine: {self.context_len}"
+                    )
+
+            # Try other possible access patterns
+            elif hasattr(self.llm_engine, "_engine"):
+                if self.tokenizer is None:
+                    tokenizer = self.llm_engine._engine.tokenizer
+                    if hasattr(tokenizer, "tokenizer"):
+                        self.tokenizer = tokenizer.tokenizer
+                    else:
+                        self.tokenizer = tokenizer
+                    logger.info("Fallback: obtained tokenizer from _engine.tokenizer")
+
+                if self.context_len is None:
+                    model_config = self.llm_engine._engine.model_config
+                    self.context_len = get_context_length(model_config.hf_config)
+                    logger.info(
+                        f"Fallback: obtained context length from _engine: {self.context_len}"
+                    )
+
+            else:
+                logger.warning(
+                    "Unable to access tokenizer or model config through any known method"
+                )
+                # Set reasonable defaults
+                if self.tokenizer is None:
+                    logger.warning(
+                        "Tokenizer not available - some features may not work"
+                    )
+                if self.context_len is None:
+                    self.context_len = 2048  # Conservative default
+                    logger.warning(f"Using default context length: {self.context_len}")
+
+        except Exception as fallback_error:
+            logger.error(f"Fallback initialization also failed: {fallback_error}")
+            # Set minimal defaults to prevent crashes
+            if self.context_len is None:
+                self.context_len = 2048
+                logger.warning("Using minimal default context length: 2048")
+
+    async def get_tokenizer(self):
+        """Get tokenizer, initializing if necessary"""
+        # Lazy initialization - only initialize when first needed
+        if not self._initialization_started:
+            self._initialization_started = True
+            await self._initialize_async()
+
+        # Wait for initialization to complete if it's still in progress
+        max_wait = 30  # seconds
+        wait_time = 0
+        while not self._initialization_complete and wait_time < max_wait:
+            await asyncio.sleep(0.1)
+            wait_time += 0.1
+
+        if not self._initialization_complete:
+            logger.warning("Tokenizer initialization did not complete in time")
+
+        return self.tokenizer
 
     async def generate_stream(self, params):
         self.call_ct += 1
@@ -77,8 +263,16 @@ class VLLMWorker(BaseModelWorker):
         max_new_tokens = params.get("max_new_tokens", 256)
         stop_str = params.get("stop", None)
         stop_token_ids = params.get("stop_token_ids", None) or []
-        if self.tokenizer.eos_token_id is not None:
-            stop_token_ids.append(self.tokenizer.eos_token_id)
+
+        # Get tokenizer asynchronously
+        tokenizer = await self.get_tokenizer()
+        if (
+            tokenizer
+            and hasattr(tokenizer, "eos_token_id")
+            and tokenizer.eos_token_id is not None
+        ):
+            stop_token_ids.append(tokenizer.eos_token_id)
+
         echo = params.get("echo", True)
         use_beam_search = params.get("use_beam_search", False)
         best_of = params.get("best_of", None)
@@ -92,32 +286,53 @@ class VLLMWorker(BaseModelWorker):
         elif isinstance(stop_str, list) and stop_str != []:
             stop.update(stop_str)
 
-        for tid in stop_token_ids:
-            if tid is not None:
-                s = self.tokenizer.decode(tid)
-                if s != "":
-                    stop.add(s)
+        if tokenizer:
+            for tid in stop_token_ids:
+                if tid is not None:
+                    try:
+                        s = tokenizer.decode(tid)
+                        if s != "":
+                            stop.add(s)
+                    except Exception as e:
+                        logger.warning(f"Failed to decode stop token {tid}: {e}")
 
         # make sampling params in vllm
         top_p = max(top_p, 1e-5)
         if temperature <= 1e-5:
             top_p = 1.0
 
-        sampling_params = SamplingParams(
-            n=1,
-            temperature=temperature,
-            top_p=top_p,
-            # use_beam_search=use_beam_search,
-            stop=list(stop),
-            stop_token_ids=stop_token_ids,
-            max_tokens=max_new_tokens,
-            top_k=top_k,
-            presence_penalty=presence_penalty,
-            frequency_penalty=frequency_penalty,
-            best_of=best_of,
-            seed=1234,
-            skip_special_tokens=False,
-        )
+        # Create sampling params with error handling for version compatibility
+        sampling_params_kwargs = {
+            "n": 1,
+            "temperature": temperature,
+            "top_p": top_p,
+            "stop": list(stop),
+            "stop_token_ids": stop_token_ids,
+            "max_tokens": max_new_tokens,
+            "top_k": top_k,
+            "presence_penalty": presence_penalty,
+            "frequency_penalty": frequency_penalty,
+            "seed": 1234,
+            "skip_special_tokens": False,
+        }
+
+        # Add optional parameters that might not exist in all vLLM versions
+        if best_of is not None:
+            sampling_params_kwargs["best_of"] = best_of
+
+        # Remove use_beam_search if not supported (newer vLLM versions)
+        try:
+            sampling_params = SamplingParams(**sampling_params_kwargs)
+        except TypeError as e:
+            if "use_beam_search" in str(e):
+                # Remove use_beam_search and try again
+                logger.warning(
+                    "use_beam_search parameter not supported in this vLLM version, ignoring it"
+                )
+                sampling_params = SamplingParams(**sampling_params_kwargs)
+            else:
+                raise e
+
         results_generator = engine.generate(context, sampling_params, request_id)
 
         async for request_output in results_generator:
@@ -240,7 +455,19 @@ async def api_get_conv(request: Request):
 
 @app.post("/model_details")
 async def api_model_details(request: Request):
-    return {"context_length": worker.context_len}
+    # Ensure context_len is available using lazy initialization
+    if not worker._initialization_started:
+        worker._initialization_started = True
+        await worker._initialize_async()
+
+    # Wait for initialization if needed
+    max_wait = 30  # seconds
+    wait_time = 0
+    while not worker._initialization_complete and wait_time < max_wait:
+        await asyncio.sleep(0.1)
+        wait_time += 0.1
+
+    return {"context_length": worker.context_len or 2048}
 
 
 if __name__ == "__main__":
