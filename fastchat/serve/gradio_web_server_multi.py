@@ -1,6 +1,7 @@
 """
 The gradio demo server with multiple tabs.
 It supports chatting with a single model or chatting with two models side-by-side.
+Now supports multipage functionality with a duplicate interface at /human-eval
 """
 
 import argparse
@@ -38,6 +39,12 @@ from fastchat.serve.gradio_web_server import (
     get_model_list,
     load_demo_single,
     get_ip,
+)
+
+from fastchat.serve.gradio_web_server_eval import (
+    build_single_model_ui_eval,
+    set_global_vars_eval,
+    load_api_endpoint_info_eval,
 )
 from fastchat.serve.monitor.monitor import build_leaderboard_tab
 from fastchat.utils import (
@@ -106,6 +113,172 @@ def load_demo(url_params, request: gr.Request):
     )
 
 
+def load_demo_eval(url_params, request: gr.Request):
+    """Load demo for evaluation interface"""
+    global models, all_models, vl_models
+
+    ip = get_ip(request)
+    logger.info(f"load_demo_eval. ip: {ip}. params: {url_params}")
+
+    selected = 0
+    if "arena" in url_params:
+        selected = 0
+    elif "direct" in url_params or "model" in url_params:
+        selected = 1
+    elif "vision" in url_params:
+        selected = 2
+    elif "leaderboard" in url_params:
+        selected = 3
+
+    if args.model_list_mode == "reload":
+        models, all_models = get_model_list(
+            args.controller_url,
+            args.register_api_endpoint_file,
+            vision_arena=False,
+        )
+
+        vl_models, all_vl_models = get_model_list(
+            args.controller_url,
+            args.register_api_endpoint_file,
+            vision_arena=True,
+        )
+
+    # For evaluation, we use the evaluation-specific load function
+    single_eval_updates = load_demo_single(models, url_params)
+    side_by_side_named_updates = load_demo_side_by_side_named(models, url_params)
+
+    vision_language_updates = load_demo_single(vl_models, url_params)
+    side_by_side_vision_named_updates = load_demo_side_by_side_named(
+        vl_models, url_params
+    )
+    side_by_side_vision_anony_updates = load_demo_side_by_side_vision_anony(
+        vl_models, url_params
+    )
+
+    return (
+        (gr.Tabs(selected=selected),)
+        + side_by_side_named_updates
+        + single_eval_updates
+        + side_by_side_vision_named_updates
+        + side_by_side_vision_anony_updates
+        + vision_language_updates
+    )
+
+
+def build_interface_tabs(models, vl_models, elo_results_file, leaderboard_table_file):
+    """Helper function to build the main interface tabs - can be reused for multiple pages"""
+    tabs_components = []
+
+    with gr.Tabs(selected=1) as tabs:
+        with gr.Tab("⚔️  Arena (side-by-side)", id=0):
+            side_by_side_named_list = build_side_by_side_ui_named(models)
+
+        with gr.Tab("💬 Direct Chat", id=1):
+            single_model_list = build_single_model_ui(models, add_promotion_links=True)
+        with gr.Tab("⚔️  Arena (battle)", id=2):
+            side_by_side_anony_list = build_side_by_side_ui_anony(models)
+
+        demo_tabs = (
+            [tabs]
+            + single_model_list
+            + side_by_side_anony_list
+            + side_by_side_named_list
+        )
+
+        if args.vision_arena:
+            with gr.Tab("Vision Arena", id=3):
+                with gr.Tab("⚔️  Vision Arena (battle)", id=3):
+                    side_by_side_vision_anony_list = build_side_by_side_vision_ui_anony(
+                        vl_models,
+                        random_questions=args.random_questions,
+                    )
+
+                with gr.Tab("⚔️  Vision Arena (side-by-side)", id=4):
+                    side_by_side_vision_named_list = build_side_by_side_vision_ui_named(
+                        vl_models,
+                        random_questions=args.random_questions,
+                    )
+
+                with gr.Tab("👀 Vision Direct Chat", id=5):
+                    single_vision_language_model_list = (
+                        build_single_vision_language_model_ui(
+                            vl_models,
+                            add_promotion_links=True,
+                            random_questions=args.random_questions,
+                        )
+                    )
+            demo_tabs += (
+                side_by_side_vision_anony_list
+                + side_by_side_vision_named_list
+                + single_vision_language_model_list
+            )
+
+        if elo_results_file:
+            with gr.Tab("Leaderboard", id=6):
+                build_leaderboard_tab(
+                    elo_results_file, leaderboard_table_file, show_plot=True
+                )
+
+    return demo_tabs
+
+
+def build_human_eval_interface_tabs(
+    models, vl_models, elo_results_file, leaderboard_table_file
+):
+    """Helper function to build the human evaluation interface tabs"""
+    tabs_components = []
+
+    with gr.Tabs(selected=0) as tabs:
+        # For human evaluation, prioritize direct chat for single-turn evaluation
+        with gr.Tab("💬 Direct Chat - Normal", id=0):
+            single_model_list_normal = build_single_model_ui_eval(
+                models, add_promotion_links=False, mode="normal"
+            )
+
+        with gr.Tab("🔬 Direct Chat - Enforce Clear", id=1, visible=False):
+            single_model_list_eval = build_single_model_ui_eval(
+                models, add_promotion_links=False, mode="autoclear"
+            )
+
+        demo_tabs = [tabs] + single_model_list_normal + single_model_list_eval
+
+        if args.vision_arena:
+            with gr.Tab("👁️ Vision Evaluation", id=2):
+                with gr.Tab("📊 Vision (side-by-side)", id=3):
+                    side_by_side_vision_named_list = build_side_by_side_vision_ui_named(
+                        vl_models,
+                        random_questions=args.random_questions,
+                    )
+
+                with gr.Tab("🥊 Vision (blind)", id=4):
+                    side_by_side_vision_anony_list = build_side_by_side_vision_ui_anony(
+                        vl_models,
+                        random_questions=args.random_questions,
+                    )
+
+                with gr.Tab("👀 Vision Direct Chat", id=5):
+                    single_vision_language_model_list = (
+                        build_single_vision_language_model_ui(
+                            vl_models,
+                            add_promotion_links=False,
+                            random_questions=args.random_questions,
+                        )
+                    )
+            demo_tabs += (
+                side_by_side_vision_named_list
+                + side_by_side_vision_anony_list
+                + single_vision_language_model_list
+            )
+
+        if elo_results_file:
+            with gr.Tab("📈 Leaderboard", id=3):
+                build_leaderboard_tab(
+                    elo_results_file, leaderboard_table_file, show_plot=True
+                )
+
+    return demo_tabs
+
+
 def build_demo(models, vl_models, elo_results_file, leaderboard_table_file):
     text_size = gr.themes.sizes.text_md
     if args.show_terms_of_use:
@@ -129,72 +302,17 @@ window.__gradio_mode__ = "app";
 </script>
         """
 
+    # Main demo page
     with gr.Blocks(
         title="Chat with Open Large Language Models",
         theme=gr.themes.Default(text_size=text_size),
         css=block_css,
         head=head_js,
     ) as demo:
-        with gr.Tabs(selected=1) as tabs:
-            # with gr.Tab("Text Arena", id=0):
-
-            with gr.Tab("⚔️  Arena (side-by-side)", id=0):
-                side_by_side_named_list = build_side_by_side_ui_named(models)
-
-            with gr.Tab("💬 Direct Chat", id=1):
-                single_model_list = build_single_model_ui(
-                    models, add_promotion_links=True
-                    )
-            with gr.Tab("⚔️  Arena (battle)", id=2):
-                side_by_side_anony_list = build_side_by_side_ui_anony(models)
-
-            demo_tabs = (
-                [tabs]
-                + single_model_list
-                + side_by_side_anony_list
-                + side_by_side_named_list
-            )
-
-            if args.vision_arena:
-                with gr.Tab("Vision Arena", id=3):
-                    with gr.Tab("⚔️  Vision Arena (battle)", id=3):
-                        side_by_side_vision_anony_list = (
-                            build_side_by_side_vision_ui_anony(
-                                vl_models,
-                                random_questions=args.random_questions,
-                            )
-                        )
-
-                    with gr.Tab("⚔️  Vision Arena (side-by-side)", id=4):
-                        side_by_side_vision_named_list = (
-                            build_side_by_side_vision_ui_named(
-                                vl_models,
-                                random_questions=args.random_questions,
-                            )
-                        )
-
-                    with gr.Tab("👀 Vision Direct Chat", id=5):
-                        single_vision_language_model_list = (
-                            build_single_vision_language_model_ui(
-                                vl_models,
-                                add_promotion_links=True,
-                                random_questions=args.random_questions,
-                            )
-                        )
-                demo_tabs += (
-                    side_by_side_vision_anony_list
-                    + side_by_side_vision_named_list
-                    + single_vision_language_model_list
-                )
-
-            if elo_results_file:
-                with gr.Tab("Leaderboard", id=6):
-                    build_leaderboard_tab(
-                        elo_results_file, leaderboard_table_file, show_plot=True
-                    )
-
-            # with gr.Tab("ℹ️  About Us", id=7):
-            #     about = build_about()
+        # Build the main interface
+        demo_tabs = build_interface_tabs(
+            models, vl_models, elo_results_file, leaderboard_table_file
+        )
 
         url_params = gr.JSON(visible=False)
 
@@ -205,6 +323,22 @@ window.__gradio_mode__ = "app";
             load_demo,
             [url_params],
             demo_tabs,
+            js=load_js,
+        )
+
+    # Create the Human Eval page with the specialized interface
+    with demo.route("Human Eval", "/human-eval") as human_eval_demo:
+        # Build the specialized interface tabs for the human eval page
+        demo_tabs_human_eval = build_human_eval_interface_tabs(
+            models, vl_models, elo_results_file, leaderboard_table_file
+        )
+
+        url_params_human_eval = gr.JSON(visible=False)
+
+        human_eval_demo.load(
+            load_demo_eval,
+            [url_params_human_eval],
+            demo_tabs_human_eval,
             js=load_js,
         )
 
@@ -292,10 +426,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger.info(f"args: {args}")
 
-    # Set global variables
+    # Set global variables for main gradio web server
     set_global_vars(args.controller_url, args.moderate, args.use_remote_storage)
     set_global_vars_named(args.moderate)
     set_global_vars_anony(args.moderate)
+
+    # Set global variables for evaluation server
+    set_global_vars_eval(args.controller_url, args.moderate, args.use_remote_storage)
+
+    # Load API endpoint info for evaluation server
+    load_api_endpoint_info_eval(args.register_api_endpoint_file)
+
     models, all_models = get_model_list(
         args.controller_url,
         args.register_api_endpoint_file,
