@@ -931,6 +931,7 @@ def build_single_model_ui_eval(models, add_promotion_links=False, mode="autoclea
             step=0.1,
             interactive=True,
             label="Temperature",
+            visible=False,
         )
         top_p = gr.Slider(
             minimum=0.0,
@@ -939,6 +940,7 @@ def build_single_model_ui_eval(models, add_promotion_links=False, mode="autoclea
             step=0.1,
             interactive=True,
             label="Top P",
+            visible=False,
         )
         max_output_tokens = gr.Slider(
             minimum=16,
@@ -947,6 +949,7 @@ def build_single_model_ui_eval(models, add_promotion_links=False, mode="autoclea
             step=128,
             interactive=True,
             label="Max output tokens",
+            visible=False,
         )
 
     # Register listeners with evaluation-specific functions
