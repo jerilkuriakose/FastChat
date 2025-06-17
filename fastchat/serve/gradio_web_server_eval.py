@@ -873,7 +873,9 @@ def build_single_model_ui_eval(models, add_promotion_links=False, mode="autoclea
                 label="Outdated info", visible=False, elem_id="cb_outdated_info"
             )
             checkbox_hallucination = gr.Checkbox(
-                label="Hallucination", visible=False, elem_id="cb_hallucination"
+                label="Hallucination and Off-Topic info",
+                visible=False,
+                elem_id="cb_hallucination",
             )
             checkbox_prompt_misunderstood = gr.Checkbox(
                 label="Prompt Misunderstood",
@@ -881,7 +883,9 @@ def build_single_model_ui_eval(models, add_promotion_links=False, mode="autoclea
                 elem_id="cb_prompt_misunderstood",
             )
             checkbox_off_topic = gr.Checkbox(
-                label="Off-Topic Info", visible=False, elem_id="cb_off_topic"
+                label="Culturally and Safety alignment",
+                visible=False,
+                elem_id="cb_off_topic",
             )
             checkbox_greeting_ignored = gr.Checkbox(
                 label="Greeting ignored (no down-vote)",

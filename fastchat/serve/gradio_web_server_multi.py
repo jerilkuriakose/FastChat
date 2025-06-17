@@ -235,7 +235,7 @@ def build_human_eval_interface_tabs(
                 models, add_promotion_links=False, mode="normal"
             )
 
-        with gr.Tab("🔬 Direct Chat - Enforce Clear", id=1, visible=False):
+        with gr.Tab("🔬 Direct Chat - Enforce Clear", id=1, visible=True):
             single_model_list_eval = build_single_model_ui_eval(
                 models, add_promotion_links=False, mode="autoclear"
             )
