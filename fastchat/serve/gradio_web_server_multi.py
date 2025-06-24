@@ -15,6 +15,11 @@ from fastchat.serve.gradio_block_arena_anony import (
     load_demo_side_by_side_anony,
     set_global_vars_anony,
 )
+from fastchat.serve.gradio_block_arena_anony_eval import (
+    build_side_by_side_ui_anony_eval,
+    load_demo_side_by_side_anony_eval,
+    set_global_vars_anony_eval,
+)
 from fastchat.serve.gradio_block_arena_named import (
     build_side_by_side_ui_named,
     load_demo_side_by_side_named,
@@ -146,6 +151,9 @@ def load_demo_eval(url_params, request: gr.Request):
     # For evaluation, we use the evaluation-specific load function
     single_eval_updates = load_demo_single(models, url_params)
     side_by_side_named_updates = load_demo_side_by_side_named(models, url_params)
+    side_by_side_anony_updates_eval = load_demo_side_by_side_anony_eval(
+        all_models, url_params
+    )
 
     vision_language_updates = load_demo_single(vl_models, url_params)
     side_by_side_vision_named_updates = load_demo_side_by_side_named(
@@ -162,6 +170,7 @@ def load_demo_eval(url_params, request: gr.Request):
         + side_by_side_vision_named_updates
         + side_by_side_vision_anony_updates
         + vision_language_updates
+        + side_by_side_anony_updates_eval
     )
 
 
@@ -240,6 +249,9 @@ def build_human_eval_interface_tabs(
                 models, add_promotion_links=False, mode="autoclear"
             )
 
+        with gr.Tab("⚔️  Arena (battle)", id=2):
+            side_by_side_anony_list_eval = build_side_by_side_ui_anony_eval(models)
+
         demo_tabs = [tabs] + single_model_list_normal + single_model_list_eval
 
         if args.vision_arena:
@@ -270,11 +282,11 @@ def build_human_eval_interface_tabs(
                 + single_vision_language_model_list
             )
 
-        if elo_results_file:
-            with gr.Tab("📈 Leaderboard", id=3):
-                build_leaderboard_tab(
-                    elo_results_file, leaderboard_table_file, show_plot=True
-                )
+        # if elo_results_file:
+        with gr.Tab("📈 Leaderboard", id=3):
+            build_leaderboard_tab(
+                elo_results_file, leaderboard_table_file, show_plot=True
+            )
 
     return demo_tabs
 
@@ -430,6 +442,7 @@ if __name__ == "__main__":
     set_global_vars(args.controller_url, args.moderate, args.use_remote_storage)
     set_global_vars_named(args.moderate)
     set_global_vars_anony(args.moderate)
+    set_global_vars_anony_eval(args.moderate)
 
     # Set global variables for evaluation server
     set_global_vars_eval(args.controller_url, args.moderate, args.use_remote_storage)

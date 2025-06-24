@@ -111,7 +111,7 @@ def vote_last_response_eval(
         filename = filename.replace("2024", "vision-eval-tmp-2024")
     else:
         # Add eval prefix to log files
-        filename = filename.replace("conv.json", "eval-conv.json")
+        filename = filename.replace("conv.json", "conv-eval.json")
 
     # Process checkbox data
     selected_issues = evaluation_checkboxes if evaluation_checkboxes else []
