@@ -53,14 +53,16 @@ def get_vote_stats_filename():
 
 
 def vote_type_to_winner(vote_type):
-    if vote_type == "leftvote":
+    if vote_type == "firstvote":
         return "a"
-    elif vote_type == "rightvote":
-        return "b"
-    elif vote_type == "tievote":
+    elif vote_type == "secondvote":
+        return "a"
+    elif vote_type == "thirdvote":
         return "tie"
-    elif vote_type == "bothbad_vote":
-        return "both-bad"
+    elif vote_type == "fourthvote":
+        return "b"
+    elif vote_type == "fifthvote":
+        return "b"
     else:
         raise ValueError(f"Unexpected vote type: {vote_type}")
 
@@ -129,46 +131,55 @@ def vote_last_response(states, vote_type, model_selectors, request: gr.Request):
         "### Model A: " + states[0].model_name,
         "### Model B: " + states[1].model_name,
     )
-    yield names + ("",) + (disable_btn,) * 4
+    yield names + ("",) + (disable_btn,) * 5
 
 
-def leftvote_last_response(
+def firstvote_last_response(
     state0, state1, model_selector0, model_selector1, request: gr.Request
 ):
-    logger.info(f"leftvote (anony). ip: {get_ip(request)}")
-    logger.info(model_selector0)
+    logger.info(f"firstvote (anony). ip: {get_ip(request)}")
     for x in vote_last_response(
-        [state0, state1], "leftvote", [model_selector0, model_selector1], request
+        [state0, state1], "firstvote", [model_selector0, model_selector1], request
     ):
         yield x
 
 
-def rightvote_last_response(
+def secondvote_last_response(
     state0, state1, model_selector0, model_selector1, request: gr.Request
 ):
-    logger.info(f"rightvote (anony). ip: {get_ip(request)}")
+    logger.info(f"secondvote (anony). ip: {get_ip(request)}")
     for x in vote_last_response(
-        [state0, state1], "rightvote", [model_selector0, model_selector1], request
+        [state0, state1], "secondvote", [model_selector0, model_selector1], request
     ):
         yield x
 
 
-def tievote_last_response(
+def thirdvote_last_response(
     state0, state1, model_selector0, model_selector1, request: gr.Request
 ):
-    logger.info(f"tievote (anony). ip: {get_ip(request)}")
+    logger.info(f"thirdvote (anony). ip: {get_ip(request)}")
     for x in vote_last_response(
-        [state0, state1], "tievote", [model_selector0, model_selector1], request
+        [state0, state1], "thirdvote", [model_selector0, model_selector1], request
     ):
         yield x
 
 
-def bothbad_vote_last_response(
+def fourthvote_last_response(
     state0, state1, model_selector0, model_selector1, request: gr.Request
 ):
-    logger.info(f"bothbad_vote (anony). ip: {get_ip(request)}")
+    logger.info(f"fourthvote (anony). ip: {get_ip(request)}")
     for x in vote_last_response(
-        [state0, state1], "bothbad_vote", [model_selector0, model_selector1], request
+        [state0, state1], "fourthvote", [model_selector0, model_selector1], request
+    ):
+        yield x
+
+
+def fifthvote_last_response(
+    state0, state1, model_selector0, model_selector1, request: gr.Request
+):
+    logger.info(f"fifthvote (anony). ip: {get_ip(request)}")
+    for x in vote_last_response(
+        [state0, state1], "fifthvote", [model_selector0, model_selector1], request
     ):
         yield x
 
@@ -180,11 +191,11 @@ def regenerate(state0, state1, request: gr.Request):
         for i in range(num_sides):
             states[i].conv.update_last_message(None)
         return (
-            states + [x.to_gradio_chatbot() for x in states] + [""] + [disable_btn] * 6
+            states + [x.to_gradio_chatbot() for x in states] + [""] + [disable_btn] * 7
         )
     states[0].skip_next = True
     states[1].skip_next = True
-    return states + [x.to_gradio_chatbot() for x in states] + [""] + [no_change_btn] * 6
+    return states + [x.to_gradio_chatbot() for x in states] + [""] + [no_change_btn] * 7
 
 
 def clear_history(request: gr.Request):
@@ -194,7 +205,7 @@ def clear_history(request: gr.Request):
         + [None] * num_sides
         + anony_names
         + [""]
-        + [invisible_btn] * 4
+        + [invisible_btn] * 5
         + [disable_btn] * 2
         + [""]
     )
@@ -394,7 +405,7 @@ def add_text(
             + [
                 no_change_btn,
             ]
-            * 6
+            * 7
             + [""]
         )
 
@@ -423,7 +434,7 @@ def add_text(
             + [
                 no_change_btn,
             ]
-            * 6
+            * 7
             + [""]
         )
 
@@ -447,7 +458,7 @@ def add_text(
         + [
             disable_btn,
         ]
-        * 6
+        * 7
         + [hint_msg]
     )
 
@@ -467,9 +478,9 @@ def bot_response_multi(
         yield (
             state0,
             state1,
-            state0.to_gradio_chatbot(),
-            state1.to_gradio_chatbot(),
-        ) + (no_change_btn,) * 6
+            state0.to_gradio_chatbot() if state0 is not None else [],
+            state1.to_gradio_chatbot() if state1 is not None else [],
+        ) + (no_change_btn,) * 7
         return
 
     states = [state0, state1]
@@ -516,7 +527,7 @@ def bot_response_multi(
                 stop = False
             except StopIteration:
                 pass
-        yield states + chatbots + [disable_btn] * 6
+        yield states + chatbots + [disable_btn] * 7
         if stop:
             break
 
@@ -565,15 +576,16 @@ def build_side_by_side_ui_anony_eval(models):
         with gr.Row():
             slow_warning = gr.Markdown("")
     with gr.Row():
-        leftvote_btn = gr.Button(
-            value="👈  A is better", visible=False, interactive=False
+        first_btn = gr.Button(
+            value="👈👈 A is much better", visible=False, interactive=False
         )
-        rightvote_btn = gr.Button(
-            value="👉  B is better", visible=False, interactive=False
+        second_btn = gr.Button(value="👈 A is better", visible=False, interactive=False)
+        third_btn = gr.Button(
+            value="🤝 Near-identical", visible=False, interactive=False
         )
-        tie_btn = gr.Button(value="🤝  Tie", visible=False, interactive=False)
-        bothbad_btn = gr.Button(
-            value="👎  Both are bad", visible=False, interactive=False
+        fourth_btn = gr.Button(value="👉 B is better", visible=False, interactive=False)
+        fifth_btn = gr.Button(
+            value="👉👉 B is much better", visible=False, interactive=False
         )
 
     with gr.Row():
@@ -620,32 +632,43 @@ def build_side_by_side_ui_anony_eval(models):
     imagebox = gr.State(None)
     # Register listeners
     btn_list = [
-        leftvote_btn,
-        rightvote_btn,
-        tie_btn,
-        bothbad_btn,
+        first_btn,
+        second_btn,
+        third_btn,
+        fourth_btn,
+        fifth_btn,
         regenerate_btn,
         clear_btn,
     ]
-    leftvote_btn.click(
-        leftvote_last_response,
+    first_btn.click(
+        firstvote_last_response,
         states + model_selectors,
-        model_selectors + [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        model_selectors
+        + [textbox, first_btn, second_btn, third_btn, fourth_btn, fifth_btn],
     )
-    rightvote_btn.click(
-        rightvote_last_response,
+    second_btn.click(
+        secondvote_last_response,
         states + model_selectors,
-        model_selectors + [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        model_selectors
+        + [textbox, first_btn, second_btn, third_btn, fourth_btn, fifth_btn],
     )
-    tie_btn.click(
-        tievote_last_response,
+    third_btn.click(
+        thirdvote_last_response,
         states + model_selectors,
-        model_selectors + [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        model_selectors
+        + [textbox, first_btn, second_btn, third_btn, fourth_btn, fifth_btn],
     )
-    bothbad_btn.click(
-        bothbad_vote_last_response,
+    fourth_btn.click(
+        fourthvote_last_response,
         states + model_selectors,
-        model_selectors + [textbox, leftvote_btn, rightvote_btn, tie_btn, bothbad_btn],
+        model_selectors
+        + [textbox, first_btn, second_btn, third_btn, fourth_btn, fifth_btn],
+    )
+    fifth_btn.click(
+        fifthvote_last_response,
+        states + model_selectors,
+        model_selectors
+        + [textbox, first_btn, second_btn, third_btn, fourth_btn, fifth_btn],
     )
     regenerate_btn.click(
         regenerate, states, states + chatbots + [textbox] + btn_list
