@@ -321,11 +321,11 @@ def build_side_by_side_vision_ui_named(models, random_questions=None):
         regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=False)
         share_btn = gr.Button(value="📷  Share")
 
-    with gr.Accordion("Parameters", open=False) as parameter_row:
+    with gr.Accordion("Parameters", open=False, visible=False) as parameter_row:
         temperature = gr.Slider(
             minimum=0.0,
             maximum=1.0,
-            value=0.7,
+            value=0.9,
             step=0.1,
             interactive=True,
             label="Temperature",
@@ -333,15 +333,15 @@ def build_side_by_side_vision_ui_named(models, random_questions=None):
         top_p = gr.Slider(
             minimum=0.0,
             maximum=1.0,
-            value=1.0,
+            value=0.9,
             step=0.1,
             interactive=True,
             label="Top P",
         )
         max_output_tokens = gr.Slider(
             minimum=16,
-            maximum=4096,
-            value=2048,
+            maximum=31000,
+            value=16000,
             step=128,
             interactive=True,
             label="Max output tokens",

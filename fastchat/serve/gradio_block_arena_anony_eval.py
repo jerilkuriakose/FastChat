@@ -605,7 +605,7 @@ def build_side_by_side_ui_anony_eval(models):
         temperature = gr.Slider(
             minimum=0.0,
             maximum=1.0,
-            value=0.6,
+            value=0.9,
             step=0.1,
             interactive=True,
             label="Temperature",
@@ -613,16 +613,16 @@ def build_side_by_side_ui_anony_eval(models):
         top_p = gr.Slider(
             minimum=0.0,
             maximum=1.0,
-            value=0.98,
+            value=0.9,
             step=0.1,
             interactive=True,
             label="Top P",
         )
         max_output_tokens = gr.Slider(
             minimum=16,
-            maximum=2048,
-            value=1024,
-            step=64,
+            maximum=31000,
+            value=16000,
+            step=128,
             interactive=True,
             label="Max output tokens",
         )
