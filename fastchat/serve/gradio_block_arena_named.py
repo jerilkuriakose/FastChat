@@ -442,6 +442,12 @@ def build_side_by_side_ui_named(models):
 
     # Register listeners
     imagebox = gr.State(None)
+    sys_msg_textbox = gr.Textbox(
+        show_label=False,
+        placeholder="System Prompt",
+        elem_id="system_prompt",
+        visible=False
+    )
     btn_list = [
         leftvote_btn,
         rightvote_btn,
