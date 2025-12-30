@@ -931,7 +931,7 @@ def build_single_model_ui_eval(models, add_promotion_links=False, mode="autoclea
         temperature = gr.Slider(
             minimum=0.0,
             maximum=1.0,
-            value=0.6,
+            value=0.3,
             step=0.1,
             interactive=True,
             label="Temperature",
@@ -940,7 +940,7 @@ def build_single_model_ui_eval(models, add_promotion_links=False, mode="autoclea
         top_p = gr.Slider(
             minimum=0.0,
             maximum=1.0,
-            value=0.98,
+            value=0.75,
             step=0.1,
             interactive=True,
             label="Top P",
@@ -948,8 +948,8 @@ def build_single_model_ui_eval(models, add_promotion_links=False, mode="autoclea
         )
         max_output_tokens = gr.Slider(
             minimum=16,
-            maximum=4096,
-            value=2048,
+            maximum=31000,
+            value=14000,
             step=128,
             interactive=True,
             label="Max output tokens",
